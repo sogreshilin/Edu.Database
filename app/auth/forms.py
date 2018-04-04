@@ -1,9 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo
-from app.models import Client
 from flask_babel import _, lazy_gettext as _l
-
+from app.models import Client
 
 class RegistrationForm(FlaskForm):
     first_name = StringField(_l('First name'), validators=[DataRequired()])

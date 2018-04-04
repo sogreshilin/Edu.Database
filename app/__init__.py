@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, current_app
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -9,25 +9,42 @@ from flask_babel import lazy_gettext as _l
 from flask_mail import Mail
 
 
-app = Flask(__name__)
-app.config.from_object(Config)
-
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-
-login = LoginManager(app)
-login.login_view = 'login'
+db = SQLAlchemy()
+migrate = Migrate()
+login = LoginManager()
+login.login_view = 'auth.login'
 login.login_message = _l('Please log in to access this page.')
+mail = Mail()
+bootstrap = Bootstrap()
+babel = Babel()
 
-bootstrap = Bootstrap(app)
 
-babel = Babel(app)
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-mail = Mail(app)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    mail.init_app(app)
+    bootstrap.init_app(app)
+    babel.init_app(app)
+
+    from app.errors import bp as errors_bp
+    app.register_blueprint(errors_bp)
+
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    return app
+
 
 @babel.localeselector
 def get_locale():
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
+    return request.accept_languages.best_match(current_app.config['LANGUAGES'])
 
 
-from app import routes, models, errors
+from app import models

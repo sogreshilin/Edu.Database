@@ -1,11 +1,40 @@
 from app import db
 from app.main import bp
 from app.main.forms import OrderForm
-from flask import render_template, flash, redirect, url_for
+from flask import render_template, flash, redirect, url_for, jsonify
 from flask_babel import _
 from flask_login import login_required, current_user
-import datetime
-from app.models import House, Order, HouseCategory, Client
+from app.models import House, Order, HouseCategory
+
+
+@bp.route('/api/form')
+def api_user():
+    print("houses api called")
+
+    houses = House.query.all()
+    categories = HouseCategory.query.all()
+
+    response = {
+        "houses": {
+            house.house_id : {
+                "id": house.house_id,
+                "name": house.name,
+                "category": house.house_category_id
+            } for house in houses
+        },
+        "categories": {
+            category.house_category_id: {
+                "id": category.house_category_id,
+                "name": category.name
+            } for category in categories
+        },
+        "links": {
+            category.house_category_id: [house.house_id for house in category.houses]
+            for category in categories
+        }
+    }
+
+    return jsonify(response)
 
 
 @bp.route('/index')

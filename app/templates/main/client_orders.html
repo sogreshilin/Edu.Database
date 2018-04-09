@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>{{ client.first_name + " " + client.last_name }}</h1>
+    {% if not client.orders %}
+        <p>No orders yet</p>
+    {% else %}
+        {% for order in client.orders %}
+            {% include 'main/_order.html' %}
+        {% endfor %}
+    {% endif %}
+{% endblock %}

@@ -48,5 +48,7 @@
         {% endwith %}
 
         {% block app_content %}{% endblock %}
+        <div id="app"></div>
+        <script src="{{ url_for('static', filename='js/bundle.js') }}"></script>
     </div>
 {% endblock %}

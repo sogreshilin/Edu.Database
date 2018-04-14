@@ -5,12 +5,12 @@ import { Classes, Card, NumericInput, Button, Tooltip } from '@blueprintjs/core'
 import styles from './order.scss';
 
 const GeneralOrderInformation = ({ houseCategory, houseNumber, dateFrom, dateTo }) => (
-    <div className={"general-order-info"}>
+    <section className={"generalOrderInfoSection"}>
         <h3>Общая информация о заказе</h3>
         <p>Категория дома отдыха: {houseCategory}</p>
         <p>Номер дома: {houseNumber}</p>
         <p>Время пребывания: {dateFrom.toDateString()} -- {dateTo.toDateString()}</p>
-    </div>
+    </section>
 );
 
 const getOrElse = (value, other) => value === undefined ? other : value;
@@ -36,7 +36,7 @@ export default class OrderFinalization extends React.Component {
     constructor() {
         super();
         this.state = {
-            orderedItemsCounters: new Map()
+            initialServicePrice: 0
         };
 
         this.minItemsCount = 0;
@@ -84,7 +84,6 @@ export default class OrderFinalization extends React.Component {
     }
 
     onItemValueChanged(itemId, counterValue) {
-        console.log(counterValue);
         const clampValue = (value) => {
             if (value < this.minItemsCount || Number.isNaN(counterValue)) {
                 return this.minItemsCount
@@ -97,13 +96,17 @@ export default class OrderFinalization extends React.Component {
 
         const finalValue = clampValue(counterValue);
         this.counters.set(itemId, finalValue);
-        console.log(`Item: ${itemId}. Count: ${finalValue}`);
         this.forceUpdate();
     }
 
     render() {
+        const totalPrice = servicesList.reduce(
+            (totalPrice, item) => totalPrice + getOrElse(this.counters.get(item.id), 0) * item.price,
+            this.state.initialServicePrice
+        );
+
         return (
-            <div className={"order-finalization"}>
+            <div className={"orderFinalization"}>
                 <Card>
                     <GeneralOrderInformation houseCategory={"VIP"}
                                              houseNumber={123}
@@ -112,7 +115,7 @@ export default class OrderFinalization extends React.Component {
                     />
                 </Card>
                 <Card>
-                    <div className={"extra-services"}>
+                    <section className={"extraServicesSection"}>
                         <h3>Дополнительные услуги</h3>
                         {
                             servicesList.map(item =>
@@ -126,6 +129,7 @@ export default class OrderFinalization extends React.Component {
                                                 onClick={() => this.onRemoveExtra(item.id)} />
                                         <NumericInput min={this.minItemsCount}
                                                       max={this.maxItemsCount}
+                                                      buttonPosition={"none"}
                                                       value={getOrElse(this.counters.get(item.id), this.minItemsCount)}
                                                       onValueChange={(numberValue, _) => this.onItemValueChanged(item.id, numberValue)} />
                                         <Button icon={"add"}
@@ -134,7 +138,13 @@ export default class OrderFinalization extends React.Component {
                                 </div>
                             )
                         }
-                    </div>
+                    </section>
+                </Card>
+                <Card>
+                    <section className={"totalPriceSection"}>
+                        <h3>Итоги заказа</h3>
+                        <p>Итоговая стоимость: <span>{totalPrice}</span>&#x20bd;</p>
+                    </section>
                 </Card>
             </div>
         );

@@ -1,6 +1,6 @@
 import React from 'react';
-
-import { Classes, Card, NumericInput, Button, Tooltip } from '@blueprintjs/core';
+import { Classes, Card, NumericInput, Button, Tooltip, Label, Intent } from '@blueprintjs/core';
+import PhoneInput from 'react-phone-input-2';
 
 import styles from './order.scss';
 
@@ -145,6 +145,23 @@ export default class OrderFinalization extends React.Component {
                         <h3>Итоги заказа</h3>
                         <p>Итоговая стоимость: <span>{totalPrice}</span>&#x20bd;</p>
                     </section>
+                </Card>
+                <Card>
+                    <section className={"contactInfoSection"}>
+                        <h3>Контактные данные</h3>
+                        <Label text={"Номер телефона"} helperText={"*"}>
+                            <PhoneInput defaultCountry={'ru'} regions="europe" disableDropdown={true} />
+                        </Label>
+                        <Label text={"Email"} helperText={"*"}>
+                            <input type={"email"} className={"pt-input"} required />
+                        </Label>
+                    </section>
+                </Card>
+                <Card>
+                    <div style={{"textAlign": "right"}}>
+                        <Button text={"Забронировать"} className={"sidePadding"} />
+                        <Button text={"Оплатить"} intent={Intent.SUCCESS} className={"sidePadding"} />
+                    </div>
                 </Card>
             </div>
         );

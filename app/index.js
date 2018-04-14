@@ -6,6 +6,8 @@ import axios from 'axios';
 
 import styles from './main.scss';
 
+import OrderFinalization from './components/order/OrderFinalization';
+
 class OrderForm extends React.Component {
 
     constructor(props) {
@@ -72,13 +74,20 @@ class OrderForm extends React.Component {
 
 }
 
+const Footer = () => (
+    <footer style={{"margin": "50px 0"}}>
+        Footer will be here soon...
+    </footer>
+);
 
 const App = () => (
     <Router>
         <div>
             <Switch>
+                <Route exact path='/react/order' component={OrderFinalization} />
                 <Route component={OrderForm} />
             </Switch>
+            <Footer />
         </div>
     </Router>
 );

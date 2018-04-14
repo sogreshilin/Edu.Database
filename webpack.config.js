@@ -13,7 +13,9 @@ module.exports = {
                 enforce: "pre",
                 test: /\.(css|sass|scss)$/,
                 exclude: path.resolve(__dirname, "node_modules"),
-                use: ExtractTextPlugin.extract({use: ["css-loader", "sass-loader"]})
+                loaders: ExtractTextPlugin.extract([{
+                    loader: "css-loader"
+                }, "sass-loader"])
             },
             {
                 test: /\.js?$/,

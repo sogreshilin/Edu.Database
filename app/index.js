@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
 import axios from 'axios';
 
-
+import styles from './main.scss';
 
 class OrderForm extends React.Component {
 
@@ -44,14 +45,14 @@ class OrderForm extends React.Component {
         return (
             <form>
                   <div>
-                      <label For={"house_category_select"} />
+                      <label htmlFor={"house_category_select"} />
                       <select id={"house_category_select"}
                               name={"house_category_select"}
                               onChange={this.onHouseCategoryChanged}
                               value={this.state.current_category_id}
                               required
                       >
-                          { Object.values(this.state.categories).map(category => <option value={category.id}>{category.name}</option>) }
+                          { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
                       </select>
                   </div>
                 <div>
@@ -71,7 +72,18 @@ class OrderForm extends React.Component {
 
 }
 
+
+const App = () => (
+    <Router>
+        <div>
+            <Switch>
+                <Route component={OrderForm} />
+            </Switch>
+        </div>
+    </Router>
+);
+
 ReactDOM.render(
-    <OrderForm />,
+    <App />,
     document.getElementById("app")
 );

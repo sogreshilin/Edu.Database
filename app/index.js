@@ -7,6 +7,7 @@ import axios from 'axios';
 import styles from './main.scss';
 
 import OrderFinalization from './components/order/OrderFinalization';
+import HouseFilter from "./components/house/HouseFilter";
 
 class OrderForm extends React.Component {
 
@@ -35,6 +36,7 @@ class OrderForm extends React.Component {
     onHouseCategoryChanged(event) {
         this.setState({
             current_category_id: event.target.value
+
         })
     }
 
@@ -85,6 +87,7 @@ const App = () => (
         <div>
             <Switch>
                 <Route exact path='/react/order' component={OrderFinalization} />
+                <Route exact path='/react/filter' component={HouseFilter} />
                 <Route component={OrderForm} />
             </Switch>
             <Footer />

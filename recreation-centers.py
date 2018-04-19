@@ -1,8 +1,9 @@
 from app import create_app, db, cli
-from app.models import ClientCategory, Client, RecreationCenter, HouseCategory, HouseObject, ServicePrice, House, Order
-
+from app.models import ClientCategory, Client, RecreationCenter, HouseCategory, HouseObject, ServicePrice, House, Order, OrderStatus
+from flask_cors import CORS
 
 app = create_app()
+CORS(app)
 cli.register(app)
 
 
@@ -16,8 +17,9 @@ def make_shell_context():
             'HouseCategory': HouseCategory,
             'HouseObject': HouseObject,
             'ServicePrice': ServicePrice,
-            'Order': Order}
+            'Order': Order,
+            'OrderStatus': OrderStatus}
 
 
 if __name__ == "__main__":
-        app.run()
+        app.run(host='172.16.16.251', threaded=True)

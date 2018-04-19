@@ -34,7 +34,7 @@ const FORMAT = "dddd, LL";
 //     </div>
 // );
 
-const host = "http://172.16.16.251:5000";
+const host = "http://localhost:5000";
 
 const dateToTimestamp = (date) => parseInt((date.getTime() / 1000).toFixed(0));
 

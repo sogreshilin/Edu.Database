@@ -55,8 +55,6 @@ def get_free_houses():
         from_date = validate_date(date.fromtimestamp(int(content['from_date'])))
         to_date = validate_date(date.fromtimestamp(int(content['to_date'])))
         validate_date_earlier(from_date, to_date)
-        # category = validate_house_category_id(int(content['category']))
-        # house = validate_house_id(int(content['house']))
     except ValueError as error:
         print(error)
         return Response(str(error), status=400)
@@ -66,6 +64,34 @@ def get_free_houses():
     free_houses = list(map(lambda elem: elem[0], subquery.filter(~House.house_id.in_(query)).all()))
     print('response_content:', free_houses)
     return jsonify({"houses": free_houses})
+
+
+@bp.route('/api/edit/add_house', methods=['POST'])
+def add_house():
+    content = request.json
+    try:
+        name = validate_text_non_empty(content['name'])
+        category = validate_house_category_id(int(content['categoryId']))
+    except (ValueError, KeyError) as error:
+        return Response(str(error), status=400)
+    description = content.get('text', '')
+    image_url = content.get('image_url', '')
+    db.session.add(House(name=name, house_category=category, description=description, image_url=image_url))
+    db.session.commit()
+    return Response()
+
+
+@bp.route('/api/edit/add_house_category', methods=['POST'])
+def add_house_category():
+    content = request.json
+    try:
+        name = validate_text_non_empty(content['name'])
+    except (ValueError, KeyError) as error:
+        return Response(str(error), status=400)
+    description = content.get('text', '')
+    db.session.add(HouseCategory(name=name, description=description))
+    db.session.commit()
+    return Response()
 
 
 def validate_house_category_id(id):
@@ -96,10 +122,10 @@ def validate_date_earlier(from_date, to_date):
         raise ValueError('Check in date must be earlier than check out date')
 
 
-def validate_name(name):
-    if not name:
-        raise ValueError('Name is empty')
-    return name
+def validate_text_non_empty(text):
+    if not text:
+        raise ValueError('Required field is empty')
+    return text
 
 
 def validate_email(email):
@@ -129,8 +155,8 @@ def api_book():
         client_category = ClientCategory.COMPANY_WORKER \
             if content['is_company_worker'] == 'True' \
             else ClientCategory.NON_COMPANY_WORKER
-        last_name = validate_name(content['last_name'])
-        first_name = validate_name(content['first_name'])
+        last_name = validate_text_non_empty(content['last_name'])
+        first_name = validate_text_non_empty(content['first_name'])
         middle_name = content['middle_name']
         email = validate_email(content['email'])
         phone = validate_phone(content['phone'])

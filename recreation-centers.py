@@ -22,4 +22,4 @@ def make_shell_context():
 
 
 if __name__ == "__main__":
-        app.run(host='172.16.16.251', threaded=True)
+        app.run(threaded=True)

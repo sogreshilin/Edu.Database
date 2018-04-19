@@ -8,8 +8,10 @@ import styles from './main.scss';
 
 import OrderFinalization from './components/order/OrderFinalization';
 import HouseFilter from "./components/house/HouseFilter";
+import EditHouse from "./components/edit/EditHouse";
+import EditHouseCategory from "./components/edit/EditHouseCategory";
 
-
+export const server = 'http://localhost:5000';
 
 
 class OrderForm extends React.Component {
@@ -91,6 +93,8 @@ const App = () => (
             <Switch>
                 <Route exact path='/react/order' component={OrderFinalization} />
                 <Route exact path='/react/filter' component={HouseFilter} />
+                <Route exact path='/react/edit/add_house' component={EditHouse} />
+                <Route exact path='/react/edit/add_house_category' component={EditHouseCategory} />
                 <Route component={OrderForm} />
             </Switch>
             <Footer />

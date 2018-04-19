@@ -73,6 +73,7 @@ class HouseCategory(db.Model):
     house_category_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
     center_id = db.Column(db.Integer, db.ForeignKey('recreation_center.center_id'))
+    description = db.Column(db.Text)
     objects = db.relationship('HouseObject', secondary=house_category_object)
 
 

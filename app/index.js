@@ -9,10 +9,13 @@ import styles from './main.scss';
 import OrderFinalization from './components/order/OrderFinalization';
 import HouseFilter from "./components/house/HouseFilter";
 
+
+
+
 class OrderForm extends React.Component {
 
-    constructor(props) {
-        super(props);
+    constructor() {
+        super();
         this.state = {
             houses: {},
             categories: {},
@@ -41,9 +44,9 @@ class OrderForm extends React.Component {
     }
 
     render() {
-        const filtered_houses = this.state.current_category_id !== undefined ?
+        const filtered_houses = this.state.currentCategoryId !== undefined ?
             this.state
-                .links[this.state.current_category_id]
+                .links[this.state.currentCategoryId]
                 .map(categoryId => this.state.houses[categoryId]) : [];
 
         return (
@@ -53,7 +56,7 @@ class OrderForm extends React.Component {
                       <select id={"house_category_select"}
                               name={"house_category_select"}
                               onChange={this.onHouseCategoryChanged}
-                              value={this.state.current_category_id}
+                              value={this.state.currentCategoryId}
                               required
                       >
                           { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
@@ -62,7 +65,7 @@ class OrderForm extends React.Component {
                 <div>
                     <select id={"house_select"}
                             name={"house_select"}
-                            disabled={this.state.current_category_id === undefined}>
+                            disabled={this.state.currentCategoryId === undefined}>
                         <option value={undefined}>-- Not Selected --</option>
                         { filtered_houses.map(house => <option value={house.id}>{house.name}</option>) }
                     </select>

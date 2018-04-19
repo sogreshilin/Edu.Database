@@ -1,165 +1,233 @@
 import React from 'react';
-import { Classes, Card, NumericInput, Button, Tooltip, Label, Intent } from '@blueprintjs/core';
+import { Card, Button, Label, Intent, Checkbox } from '@blueprintjs/core';
 import PhoneInput from 'react-phone-input-2';
+
+import { StorageKeys, getFromStorageOrThrow } from "../Storage";
+
+import axios from 'axios';
 
 import styles from './order.scss';
 
+
+const mockSessionStorage = () => {
+    sessionStorage.setItem("category_id", 12);
+    sessionStorage.setItem("house_id", 1);
+    sessionStorage.setItem("from_timestamp", 1525000000);
+    sessionStorage.setItem("to_timestamp", 1525090600);
+};
+
+// mockSessionStorage();
+
+const emailRegExPattern = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])";
+const emailRegEx = new RegExp(emailRegExPattern);
+
+
+// Form fields validation and formatting
+
+const isEmailValid = (email) => emailRegEx.test(email);
+
+const formatPhoneNumber = (phoneNumber) => phoneNumber.split('').filter(_ => _ === '+' ||  _.match(/\d/) !== null).join('');
+
+const toInt = (value) => Number.parseInt(value);
+
+
+// Form fields keys
+
+class FormKeys {
+
+    static Email() { return "email"; }
+    static FirstName() { return "first_name"; }
+    static SecondName() { return "second_name"; }
+    static ThirdName() { return "third_name"; }
+    static Phone() { return "phone"; }
+
+}
+
+
 const GeneralOrderInformation = ({ houseCategory, houseNumber, dateFrom, dateTo }) => (
     <section className={"generalOrderInfoSection"}>
-        <h3>Общая информация о заказе</h3>
+        <h3>Информация о заказе</h3>
         <p>Категория дома отдыха: {houseCategory}</p>
         <p>Номер дома: {houseNumber}</p>
+        {/*<p>Время пребывания: {dateFrom} -- {dateTo}</p>*/}
         <p>Время пребывания: {dateFrom.toDateString()} -- {dateTo.toDateString()}</p>
+        <p>Cтоимость: <span>{0}</span>&#x20bd;</p>
     </section>
 );
 
-const getOrElse = (value, other) => value === undefined ? other : value;
-
-
-const servicesList = [
-    {
-        id: 1,
-        title: "Name 1",
-        description: "The very best description",
-        price: 1000,
-    },
-    {
-        id: 2,
-        title: "Name 2",
-        description: "Yeaaaah",
-        price: 234,
-    },
-];
 
 export default class OrderFinalization extends React.Component {
 
     constructor() {
         super();
         this.state = {
-            initialServicePrice: 0
+            category_id:  0,
+            house_id: 0,
+            from_timestamp: 0,
+            to_timestamp: 0,
+            email: "",
+            first_name: "",
+            second_name: "",
+            third_name: "",
+            phone: "",
+            isCompanyWorker: false,
+            invalidFields: new Set(),
         };
 
-        this.minItemsCount = 0;
-        this.maxItemsCount = 10;
-
-        this.counters = new Map();
-
-        this.onAddExtra = this.onAddExtra.bind(this);
-        this.onRemoveExtra = this.onRemoveExtra.bind(this);
-        this.onItemValueChanged = this.onItemValueChanged.bind(this);
+        this.onCheckboxClicked = this.onCheckboxClicked.bind(this);
+        this.onMakeOrderClicked = this.onMakeOrderClicked.bind(this);
+        this.onNamePartChange = this.onNamePartChange.bind(this);
+        this.onEmailChange = this.onEmailChange.bind(this);
     }
 
-    loadFromServer() {
-        const values = {};
-        const itemsCounters = new Map();
-        Object.keys(values).forEach(key => {
-            itemsCounters.set(key, 0);
-        });
+    componentWillMount() {
+        try {
+            this.setState({
+                category_id:  toInt(getFromStorageOrThrow(StorageKeys.CategoryId())),
+                categoryName:  getFromStorageOrThrow(StorageKeys.CategoryName()),
+                house_id: toInt(getFromStorageOrThrow(StorageKeys.HouseId())),
+                house_name: getFromStorageOrThrow(StorageKeys.HouseName()),
+                from_timestamp: toInt(getFromStorageOrThrow(StorageKeys.FromTimestamp())),
+                to_timestamp: toInt(getFromStorageOrThrow(StorageKeys.ToTimestamp())),
+                email: "",
+                first_name: "",
+                second_name: "",
+                third_name: "",
+                phone: "",
+                isCompanyWorker: false,
+            });
+        } catch (error) {
+            console.error(error);
+            alert("Failed to initialize components")
+        }
+    }
+
+
+    onCheckboxClicked() {
+        this.setState({
+            isCompanyWorker: !this.state.isCompanyWorker
+        })
+    }
+
+    onMakeOrderClicked() {
+        if (this.state.invalidFields.size > 0) {
+            return;
+        }
+
+        axios.post("http://172.16.16.251:5000/api/book", {
+                house_id: this.state.house_id,
+                from_date: this.state.from_timestamp,
+                to_date: this.state.to_timestamp,
+                email: this.state.email,
+                phone: formatPhoneNumber(this.state.phone),
+                first_name: this.state.first_name,
+                last_name: this.state.second_name,
+                middle_name: this.state.third_name,
+                is_company_worker: this.state.isCompanyWorker
+            })
+            .then(() => alert("Дом успешно забронирован. Вам на почту отправлено письмо с информацией о заказе"))
+            .catch(error => {
+                console.log(error.message);
+                console.log(error.response.status);
+                console.log(error.response.data);
+            })
+    }
+
+    markInvalidField(key) {
+        this.setState({
+            invalidFields: this.state.invalidFields.add(key)
+        })
+    }
+
+    updateField(key, value) {
+        const set = this.state.invalidFields;
+        set.delete(key);
+        this.setState({
+            [key]: value,
+            invalidFields: set
+        })
+    }
+
+    onNamePartChange(namePart, key) {
+        const value = namePart.trim();
+        if (value.length === 0 || value.match(/^[a-zA-Z\u0430-\u044f]+$/ig) !== null) {
+            this.updateField(key, value)
+        } else {
+            this.markInvalidField(key)
+        }
+    }
+
+    onEmailChange(email) {
+        let tempState = {};
+        if (!isEmailValid(email)) {
+            tempState["invalidFields"] = this.state.invalidFields.add(FormKeys.Email())
+        } else {
+            const set = this.state.invalidFields;
+            set.delete(FormKeys.Email());
+            tempState["invalidFields"] = set;
+        }
 
         this.setState({
-            orderedItemsCounters: itemsCounters
+            invalidFields: tempState.invalidFields,
+            [FormKeys.Email()]: email
         });
     }
 
-    onAddExtra(itemId) {
-        const currentValue = getOrElse(this.counters.get(itemId), this.minItemsCount);
-
-        if (currentValue === this.maxItemsCount) {
-            return;
-        }
-
-        const finalValue = currentValue + 1;
-        this.onItemValueChanged(itemId, finalValue);
-    }
-
-    onRemoveExtra(itemId) {
-        const currentValue = getOrElse(this.counters.get(itemId), this.minItemsCount);
-
-        if (currentValue === this.minItemsCount) {
-            return;
-        }
-
-        const finalValue = currentValue - 1;
-        this.onItemValueChanged(itemId, finalValue);
-    }
-
-    onItemValueChanged(itemId, counterValue) {
-        const clampValue = (value) => {
-            if (value < this.minItemsCount || Number.isNaN(counterValue)) {
-                return this.minItemsCount
-            } else if (value > this.maxItemsCount) {
-                return this.maxItemsCount
-            } else {
-                return value;
-            }
-        };
-
-        const finalValue = clampValue(counterValue);
-        this.counters.set(itemId, finalValue);
-        this.forceUpdate();
-    }
-
-    render() {
-        const totalPrice = servicesList.reduce(
-            (totalPrice, item) => totalPrice + getOrElse(this.counters.get(item.id), 0) * item.price,
-            this.state.initialServicePrice
-        );
-
+     render() {
         return (
             <div className={"orderFinalization"}>
                 <Card>
-                    <GeneralOrderInformation houseCategory={"VIP"}
-                                             houseNumber={123}
-                                             dateFrom={new Date(Date.now())}
-                                             dateTo={new Date(Date.now())}
+                    <GeneralOrderInformation houseCategory={this.state.category_id}
+                                             houseNumber={this.state.house_id}
+                                             dateFrom={new Date(this.state.from_timestamp * 1000)}
+                                             dateTo={new Date(this.state.to_timestamp * 1000)}
                     />
-                </Card>
-                <Card>
-                    <section className={"extraServicesSection"}>
-                        <h3>Дополнительные услуги</h3>
-                        {
-                            servicesList.map(item =>
-                                <div key={item.id} className={"extraServicesItem"}>
-                                    <Tooltip className={Classes.TOOLTIP_INDICATOR} content={item.description}>
-                                        <div>{item.title}</div>
-                                    </Tooltip>
-                                    <div>{item.price}&#x20bd;</div>
-                                    <div>
-                                        <Button icon={"remove"}
-                                                onClick={() => this.onRemoveExtra(item.id)} />
-                                        <NumericInput min={this.minItemsCount}
-                                                      max={this.maxItemsCount}
-                                                      buttonPosition={"none"}
-                                                      value={getOrElse(this.counters.get(item.id), this.minItemsCount)}
-                                                      onValueChange={(numberValue, _) => this.onItemValueChanged(item.id, numberValue)} />
-                                        <Button icon={"add"}
-                                                onClick={() => this.onAddExtra(item.id)} />
-                                    </div>
-                                </div>
-                            )
-                        }
-                    </section>
-                </Card>
-                <Card>
-                    <section className={"totalPriceSection"}>
-                        <h3>Итоги заказа</h3>
-                        <p>Итоговая стоимость: <span>{totalPrice}</span>&#x20bd;</p>
-                    </section>
                 </Card>
                 <Card>
                     <section className={"contactInfoSection"}>
                         <h3>Контактные данные</h3>
                         <Label text={"Номер телефона"} helperText={"*"}>
-                            <PhoneInput defaultCountry={'ru'} regions="europe" disableDropdown={true} />
+                            <PhoneInput disableDropdown onChange={(value) => this.setState({phone: value})}/>
                         </Label>
                         <Label text={"Email"} helperText={"*"}>
-                            <input type={"email"} className={"pt-input"} required />
+                            <input type={"email"}
+                                   className={"pt-input"}
+                                   required
+                                   value={this.state.email}
+                                   onChange={event => this.onEmailChange(event.target.value)}
+                            />
+                        </Label>
+                        <Label text={"Фамилия"} helperText={"*"}>
+                            <input className={"pt-input"}
+                                   value={this.state.second_name}
+                                   required
+                                   onChange={event => this.onNamePartChange(event.target.value, FormKeys.SecondName())}
+                            />
+                        </Label>
+                        <Label text={"Имя"} helperText={"*"}>
+                            <input className={"pt-input"}
+                                   value={this.state.first_name}
+                                   required
+                                   onChange={event => this.onNamePartChange(event.target.value, FormKeys.FirstName())}
+                            />
+                        </Label>
+                        <Label text={"Отчество"}>
+                            <input className={"pt-input"}
+                                   value={this.state.third_name}
+                                   onChange={event => this.onNamePartChange(event.target.value, FormKeys.ThirdName())}
+                            />
+                        </Label>
+                        <Label text="Я являюсь сотрудником компании" className={"pt-checkbox"}>
+                            <input type="checkbox"
+                                   checked={this.state.isCompanyWorker}
+                                   onChange={this.onCheckboxClicked}
+                            />
                         </Label>
                     </section>
                 </Card>
                 <Card>
                     <div style={{"textAlign": "right"}}>
-                        <Button text={"Забронировать"} className={"sidePadding"} />
+                        <Button text={"Забронировать"} className={"sidePadding"} onClick={this.onMakeOrderClicked}/>
                         <Button text={"Оплатить"} intent={Intent.SUCCESS} className={"sidePadding"} />
                     </div>
                 </Card>

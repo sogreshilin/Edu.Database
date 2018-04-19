@@ -1,0 +1,13 @@
+<p>Уважаемый {{ client.first_name, client.middle_name }},</p>
+<p>
+    Вы забронировали дом {{ order.house }} в базе отдыха Синегорье с
+    {{ order.check_in_time }} по {{ order.check_out_time }}.
+</p>
+<p>
+    Для просмотра состояния заказа и дальнейшей оплаты перейдите
+    <a href="{{ url_for('main.show_booking', token=token, _external=True) }}">
+        по ссылке
+    </a>.
+</p>
+<p>Вы можете вставить следующую ссылку в адресную строку браузера:</p>
+<p>{{ url_for('main.show_booking', token=token, _external=True) }}</p>

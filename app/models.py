@@ -87,6 +87,16 @@ class House(db.Model):
     house_category = db.relationship('HouseCategory', backref='houses')
 
 
+class HousePrice(db.Model):
+    __tablename__ = 'house_price'
+    date = db.Column(db.DateTime, index=True, primary_key=True)
+    client_category = db.Column(db.Enum(ClientCategory))
+    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'), primary_key=True)
+    price = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self) -> str:
+        return f"{self.date}, {self.client_category}, {self.house_category_id}, {self.price}"
+
 
 class Order(db.Model):
     __tablename__ = 'order'

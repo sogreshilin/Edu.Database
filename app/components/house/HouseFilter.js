@@ -1,6 +1,6 @@
 import React from 'react';
 import { IProps, Icon, Tag, Intent, Card } from '@blueprintjs/core';
-import { DateRange, DateRangePicker } from "@blueprintjs/datetime";
+import { DateRange, DateRangePicker, DateRangeInput } from "@blueprintjs/datetime";
 import { Select } from "@blueprintjs/select";
 
 import { Route, Redirect } from 'react-router-dom';
@@ -11,7 +11,7 @@ import moment from 'moment';
 import classNames from "classnames";
 import axios from "axios";
 
-const FORMAT = "dddd, LL";
+// const FORMAT = "dddd, LL";
 
 // const MomentDate: React.SFC<{ date: Date; format?: string }> = ({ date, format = FORMAT }) => {
 //     const m = moment(date);
@@ -22,12 +22,12 @@ const FORMAT = "dddd, LL";
 //     }
 // };
 //
-// const MomentDateRange: React.SFC<{ range: DateRange; format?: string } & IProps> = ({
+// const MomentDateRange: React.SFC<{ priceGenerationRange: DateRange; format?: string } & IProps> = ({
 //     className,
-//     range: [start, end],
+//     priceGenerationRange: [start, end],
 //     format = FORMAT,
 // }) => (
-//     <div className={classNames("docs-date-range", className)}>
+//     <div className={classNames("docs-date-priceGenerationRange", className)}>
 //         <MomentDate date={start} format={format} />
 //         <Icon icon="arrow-right" />
 //         <MomentDate date={end} format={format} />
@@ -164,7 +164,8 @@ export default class HouseFilter extends React.Component {
                         shortcuts={false}
                     />
 
-                    {/*<MomentDateRange range={this.state.dateRange} />*/}
+
+                    {/*<MomentDateRange priceGenerationRange={this.state.dateRange} />*/}
 
                     <select id={"house_category_select"}
                             name={"house_category_select"}

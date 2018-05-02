@@ -114,7 +114,7 @@ export default class OrderFinalization extends React.Component {
             return;
         }
 
-        axios.post("http://172.16.16.251:5000/api/book", {
+        axios.post("http://localhost:5000/api/book", {
                 house_id: this.state.house_id,
                 from_date: this.state.from_timestamp,
                 to_date: this.state.to_timestamp,

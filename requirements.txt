@@ -1,3 +1,4 @@
+dateutil
 PyJWT
 validate_email
 Flask==0.12.2

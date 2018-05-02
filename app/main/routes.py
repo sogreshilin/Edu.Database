@@ -1,6 +1,7 @@
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
+import dateutil.parser
 from sqlalchemy import and_
 from sqlalchemy.orm import load_only
 from validate_email import validate_email as is_email_valid
@@ -11,7 +12,7 @@ from app.main.forms import OrderForm
 from flask import render_template, flash, redirect, url_for, jsonify, request, Response
 from flask_babel import _
 from flask_login import login_required, current_user
-from app.models import House, Order, HouseCategory, Client, ClientCategory
+from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice
 from app.main.email import send_book_confirmation_email
 
 
@@ -47,6 +48,21 @@ def get_houses():
     return jsonify(response)
 
 
+@bp.route('/api/client_categories')
+def get_client_categories():
+    print("get_clients_categories api called")
+    client_categories = list(ClientCategory)
+    response = {
+        category.value: {
+            "id": category.value,
+            "name": category.name,
+            "prices": {}
+        } for category in client_categories
+    }
+    print(response)
+    return jsonify(response)
+
+
 @bp.route('/api/free_houses', methods=['POST'])
 def get_free_houses():
     content = request.json
@@ -64,6 +80,39 @@ def get_free_houses():
     free_houses = list(map(lambda elem: elem[0], subquery.filter(~House.house_id.in_(query)).all()))
     print('response_content:', free_houses)
     return jsonify({"houses": free_houses})
+
+
+def date_range(from_date, to_date):
+    current_date = from_date
+    while current_date <= to_date:
+        yield current_date
+        current_date += timedelta(days=1)
+
+
+def parse_date_range(str_date_range):
+    from_date = dateutil.parser.parse(str_date_range[0])
+    to_date = dateutil.parser.parse(str_date_range[1])
+    print("from", from_date, "to", to_date)
+    return from_date, to_date
+
+
+@bp.route('/api/edit/prices', methods=['POST'])
+def generate_prices():
+    print("Generate prices called")
+    content = request.json
+
+    for price_policy in ('weekday', 'weekend', 'holiday'):
+        for str_date_range in content[price_policy]['dates']:
+            for date in date_range(*parse_date_range(str_date_range)):
+                for key, price in content[price_policy]['prices'].items():
+                    client_category_id, house_category_id = (int(elem) for elem in key.split('_'))
+                    client_category = ClientCategory(client_category_id).name
+                    house_price = HousePrice(date=date, client_category=client_category,
+                                             house_category_id=house_category_id, price=price)
+                    db.session.merge(house_price)
+                    db.session.commit()
+
+    return Response()
 
 
 @bp.route('/api/edit/add_house', methods=['POST'])

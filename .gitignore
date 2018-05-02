@@ -1,5 +1,6 @@
 # Database Migrations
 migrations/
+app.db
 
 
 # Byte-compiled / optimized / DLL files

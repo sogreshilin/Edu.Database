@@ -1,10 +1,6 @@
-import re
-from datetime import date, datetime, timedelta
+from datetime import date
 
-import dateutil.parser
-from sqlalchemy import and_
-from sqlalchemy.orm import load_only
-from validate_email import validate_email as is_email_valid
+from sqlalchemy import and_, func
 
 from app import db
 from app.main import bp
@@ -12,8 +8,52 @@ from app.main.forms import OrderForm
 from flask import render_template, flash, redirect, url_for, jsonify, request, Response
 from flask_babel import _
 from flask_login import login_required, current_user
+
+from app.main.validators import *
 from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice
 from app.main.email import send_book_confirmation_email
+
+
+# list can be passed
+def validate_price_request(req):
+    house_category_id = request.args.get('house')
+    from_date = date.fromtimestamp(int(request.args.get('from')))
+    to_date = date.fromtimestamp(int(request.args.get('to')))
+    client_category_id = int(request.args.get('client'))
+    if client_category_id is None:
+        client_category_id = ClientCategory.NON_COMPANY_WORKER
+
+    validate_client_category_id(client_category_id)
+    validate_house_category_id(house_category_id)
+    validate_date(from_date)
+    validate_date(to_date)
+    validate_date_earlier(from_date, to_date)
+
+    return house_category_id, client_category_id, from_date, to_date
+
+
+def query_house_and_apply(fun):
+    try:
+        house_category_id, client_category_id, from_date, to_date = validate_price_request(request)
+
+    except ValueError as error:
+        return Response(str(error), status=400)
+
+    condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
+                 (HousePrice.house_category_id == house_category_id) &
+                 (HousePrice.client_category == ClientCategory(client_category_id)))
+
+    return db.session.query(fun(HousePrice.price)).filter(condition).first()
+
+
+@bp.route('/api/house/min_price')
+def get_min_house_price():
+    return jsonify({"min_price": query_house_and_apply(func.min)})
+
+
+@bp.route('/api/house/total_cost')
+def get_house_total_cost():
+    return jsonify({"total_cost": query_house_and_apply(func.sum)})
 
 
 @bp.route('/api/houses')
@@ -82,116 +122,6 @@ def get_free_houses():
     return jsonify({"houses": free_houses})
 
 
-def date_range(from_date, to_date):
-    current_date = from_date
-    while current_date <= to_date:
-        yield current_date
-        current_date += timedelta(days=1)
-
-
-def parse_date_range(str_date_range):
-    from_date = dateutil.parser.parse(str_date_range[0])
-    to_date = dateutil.parser.parse(str_date_range[1])
-    print("from", from_date, "to", to_date)
-    return from_date, to_date
-
-
-@bp.route('/api/edit/prices', methods=['POST'])
-def generate_prices():
-    print("Generate prices called")
-    content = request.json
-
-    for price_policy in ('weekday', 'weekend', 'holiday'):
-        for str_date_range in content[price_policy]['dates']:
-            for date in date_range(*parse_date_range(str_date_range)):
-                for key, price in content[price_policy]['prices'].items():
-                    client_category_id, house_category_id = (int(elem) for elem in key.split('_'))
-                    client_category = ClientCategory(client_category_id).name
-                    house_price = HousePrice(date=date, client_category=client_category,
-                                             house_category_id=house_category_id, price=price)
-                    db.session.merge(house_price)
-                    db.session.commit()
-
-    return Response()
-
-
-@bp.route('/api/edit/add_house', methods=['POST'])
-def add_house():
-    content = request.json
-    try:
-        name = validate_text_non_empty(content['name'])
-        category = validate_house_category_id(int(content['categoryId']))
-    except (ValueError, KeyError) as error:
-        return Response(str(error), status=400)
-    description = content.get('text', '')
-    image_url = content.get('image_url', '')
-    db.session.add(House(name=name, house_category=category, description=description, image_url=image_url))
-    db.session.commit()
-    return Response()
-
-
-@bp.route('/api/edit/add_house_category', methods=['POST'])
-def add_house_category():
-    content = request.json
-    try:
-        name = validate_text_non_empty(content['name'])
-    except (ValueError, KeyError) as error:
-        return Response(str(error), status=400)
-    description = content.get('text', '')
-    db.session.add(HouseCategory(name=name, description=description))
-    db.session.commit()
-    return Response()
-
-
-def validate_house_category_id(id):
-    house_category = HouseCategory.query.filter_by(house_category_id=id).first()
-    if house_category is None:
-        raise ValueError(f'House category with specified id={id} does not exist')
-    else:
-        return house_category
-
-
-def validate_house_id(id):
-    house = House.query.filter_by(house_id=id).first()
-    if house is None:
-        raise ValueError(f'House with specified id={id} does not exist')
-    else:
-        return house
-
-
-def validate_date(date):
-    if date < datetime.today().date():
-        raise ValueError(f'Check in date {date} is earlier than today')
-    else:
-        return date
-
-
-def validate_date_earlier(from_date, to_date):
-    if from_date >= to_date:
-        raise ValueError('Check in date must be earlier than check out date')
-
-
-def validate_text_non_empty(text):
-    if not text:
-        raise ValueError('Required field is empty')
-    return text
-
-
-def validate_email(email):
-    if not is_email_valid(email):
-        raise ValueError(f'Invalid e-mail {email}')
-    return email
-
-
-phone_regex = re.compile(r'^((\+7)|8)\d{10}$')
-
-
-def validate_phone(phone):
-    if phone_regex.match(phone) is None:
-        raise ValueError(f'Phone {phone} does not match')
-    return phone
-
-
 @bp.route('/api/book', methods=['POST'])
 def api_book():
     content = request.json
@@ -232,15 +162,6 @@ def api_book():
     return Response()
 
 
-# @bp.route('/api/book', methods=['OPTION'])
-# def catch_all(path):
-#     response = Response()
-#     response.headers['Access-Control-Allow-Origin'] = '*'
-#     response.headers['Access-Control-Allow-Methods'] = '*'
-#     response.headers['Access-Control-Allow-Headers'] = '*'
-#     return response
-
-
 @bp.route('/index')
 @login_required
 def index():
@@ -251,8 +172,6 @@ def index():
 @login_required
 def order():
     form = OrderForm()
-    # form.check_in.data = datetime.date.today()
-    # form.check_out.data = datetime.date.today() + datetime.timedelta(days=1)
     form.house_category.choices = [(category.house_category_id, category.name)
                                    for category in HouseCategory.query.order_by('name')]
     form.house.choices = [(house.house_id, house.name) for house in House.query.order_by('name')]

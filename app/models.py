@@ -90,7 +90,7 @@ class House(db.Model):
 class HousePrice(db.Model):
     __tablename__ = 'house_price'
     date = db.Column(db.DateTime, index=True, primary_key=True)
-    client_category = db.Column(db.Enum(ClientCategory))
+    client_category = db.Column(db.Enum(ClientCategory), primary_key=True)
     house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'), primary_key=True)
     price = db.Column(db.Integer, nullable=False)
 

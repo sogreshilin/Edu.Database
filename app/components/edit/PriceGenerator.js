@@ -46,6 +46,75 @@ function getAllWeekendsInRange(range) {
 }
 
 
+const PriceSetter = ({
+        title,
+        range,
+        dates,
+        clientCategories,
+        houseCategories,
+
+        onPickedRangeChanged,
+        onAddRange,
+        onDeleteRange,
+        onSelectedDateChanged,
+        onPriceChanged
+    }) => (
+        <div>
+            <h4>{title}</h4>
+            <p>Выберите период</p>
+            <DateRangePicker
+                allowSingleDayRange={true}
+                contiguousCalendarMonths={true}
+                minDate={range[0]}
+                maxDate={range[1]}
+                onChange={onPickedRangeChanged}
+                shortcuts={false}
+            />
+
+            <div>
+                <button onClick={onAddRange}>{'Добавить дату'}</button>
+                <button onClick={onDeleteRange}>{'Удалить дату'}</button>
+            </div>
+
+            <select size="10"
+                onChange={onSelectedDateChanged}>
+                { Object.values(dates)
+                    .map((range, index) => <option key={index}>{range[0].toLocaleDateString("ru")} - {range[1].toLocaleDateString("ru")}</option>) }
+            </select>
+
+            { Object.values(clientCategories).map((clientCategory, index) => (
+                <div key={index}>
+                    <Card>
+                        {clientCategory.name}
+                        <div>
+                            { Object.values(houseCategories).map((houseCategory, index) => (
+                               <div key={index}>
+                                <Label text={houseCategory.name}>
+                                    <input type='number' required className={"pt-input"} placeholder={'Цена'}
+                                           onChange={(event) => onPriceChanged(event, clientCategory.id, houseCategory.id)}/>
+                                </Label>
+                               </div>
+                            )) }
+                        </div>
+                    </Card>
+                </div>
+                ))
+            }
+        </div>
+);
+
+function getAllDatesFromRange(range) {
+    let currentDate = new Date(range[0]);
+    let days = [];
+
+    while (currentDate <= range[1]) {
+        days.push(new Date(currentDate));
+        currentDate = addDay(currentDate);
+    }
+
+    return days;
+}
+
 export default class PriceGenerator extends React.Component {
     constructor() {
         super();
@@ -71,7 +140,9 @@ export default class PriceGenerator extends React.Component {
             weekdaysClientCategory: null,
             weekdaysDates: [],
             weekdayPickedRange: [null, null],
-            weekdaySelectedDate: null
+            weekdaySelectedDate: null,
+
+            buttonText: "Before"
         };
 
         this.handleSavePrices = this.handleSavePrices.bind(this);
@@ -109,7 +180,6 @@ export default class PriceGenerator extends React.Component {
 
     handleAddHolidayDateRange() {
         const range = this.state.holidayPickedRange;
-        console.log("range: " + range);
         if (range[0] !== null && range[1] !== null &&
             !this.state.holidaysDates.includes(range)) {
                 this.setState(prevState => ({
@@ -120,7 +190,6 @@ export default class PriceGenerator extends React.Component {
 
     handleAddWeekendDateRange() {
         const range = this.state.weekendPickedRange;
-        console.log("range: " + range);
         if (range[0] !== null && range[1] !== null &&
             !this.state.weekendsDates.includes(range)) {
                 this.setState(prevState => ({
@@ -131,7 +200,6 @@ export default class PriceGenerator extends React.Component {
 
     handleAddWeekdayDateRange() {
         const range = this.state.weekdayPickedRange;
-        console.log("range: " + range);
         if (range[0] !== null && range[1] !== null &&
             !this.state.weekdaysDates.includes(range)) {
                 this.setState(prevState => ({
@@ -200,7 +268,6 @@ export default class PriceGenerator extends React.Component {
     }
 
     render() {
-        console.log(this.state.priceGenerationRange)
         return (
             <div className={'edit-price'}>
                 <h1>Генерация цен</h1>
@@ -218,163 +285,82 @@ export default class PriceGenerator extends React.Component {
                 </div>
                 <p/>
 
-                {/* holiday */}
                 <div>
                     <Card elevation={Elevation.TWO}>
-                        <h4>Праздничные дни</h4>
-                        <p>Выберите период</p>
-                        <DateRangePicker
-                            allowSingleDayRange={true}
-                            contiguousCalendarMonths={true}
-                            minDate={this.state.priceGenerationRange[0]}
-                            maxDate={this.state.priceGenerationRange[1]}
-                            onChange={pickedRange => this.setState({ holidayPickedRange: pickedRange })}
-                            shortcuts={false}
+                        <PriceSetter
+                            title={"Праздничные дни"}
+                            range={this.state.priceGenerationRange}
+                            dates={this.state.holidaysDates}
+                            clientCategories={this.state.clientCategories}
+                            houseCategories={this.state.houseCategories}
+
+                            onPickedRangeChanged={pickedRange => this.setState({ holidayPickedRange: pickedRange })}
+                            onAddRange={this.handleAddHolidayDateRange}
+                            onDeleteRange={this.handleDeleteHolidayDateRange}
+                            onSelectedDateChanged={(event) => this.setState({holidaySelectedDate: event.target.value})}
+                            onPriceChanged={(event, clientCategoryId, houseCategoryId) => {
+                                    const price = parseInt(event.target.value);
+                                    this.setState((prevState, props) => {
+                                        prevState.holidayClientCategoryHouseCategoryPrice[clientCategoryId + "_" + houseCategoryId] = price
+                                    })
+                                }
+                            }
                         />
-
-                        <div>
-                            <button onClick={this.handleAddHolidayDateRange}>{'Добавить дату'}</button>
-                            <button onClick={this.handleDeleteHolidayDateRange}>{'Удалить дату'}</button>
-                        </div>
-
-                        <select size="10"
-                            onChange={ (event) => this.setState({holidaySelectedDate: event.target.value}) }>
-                            { Object.values(this.state.holidaysDates)
-                                .map((range, index) => <option key={index}>{range[0].toLocaleDateString("ru")} - {range[1].toLocaleDateString("ru")}</option>) }
-                        </select>
-
-                        { Object.values(this.state.clientCategories).map((clientCategory, index) => (
-                            <div key={index}>
-                                <Card>
-                                    {clientCategory.name}
-                                    <div>
-                                        { Object.values(this.state.houseCategories).map((houseCategory, index) => (
-                                           <div key={index}>
-                                            <Label text={houseCategory.name}>
-                                                <input type='number' required className={"pt-input"} placeholder={'Цена'}
-                                                       onChange={(event) => {
-                                                           let price = parseInt(event.target.value);
-                                                           this.setState((prevState, props) => {
-                                                               holidayClientCategoryHouseCategoryPrice: prevState.holidayClientCategoryHouseCategoryPrice[clientCategory.id + "_" + houseCategory.id] = price
-                                                           })
-                                                       }}/>
-                                            </Label>
-                                           </div>
-                                        )) }
-                                    </div>
-                                </Card>
-                            </div>
-                            ))
-                        }
                     </Card>
                 </div>
+
                 <p/>
 
-
-
-                 {/*weekend */}
                 <div>
                     <Card elevation={Elevation.TWO}>
-                        <h4>Выходные дни</h4>
-                        <p>Выберите период</p>
-                        <DateRangePicker
-                            allowSingleDayRange={true}
-                            contiguousCalendarMonths={true}
-                            minDate={this.state.priceGenerationRange[0]}
-                            maxDate={this.state.priceGenerationRange[1]}
-                            onChange={pickedRange => this.setState({ weekendPickedRange: pickedRange })}
-                            shortcuts={false}
+                        <PriceSetter
+                            title={"Выходные дни"}
+                            range={this.state.priceGenerationRange}
+                            dates={this.state.weekendsDates}
+                            clientCategories={this.state.clientCategories}
+                            houseCategories={this.state.houseCategories}
+
+                            onPickedRangeChanged={pickedRange => this.setState({ weekendPickedRange: pickedRange })}
+                            onAddRange={this.handleAddWeekendDateRange}
+                            onDeleteRange={this.handleDeleteWeekendDateRange}
+                            onSelectedDateChanged={(event) => this.setState({weekendSelectedDate: event.target.value})}
+                            onPriceChanged={(event, clientCategoryId, houseCategoryId) => {
+                                    const price = parseInt(event.target.value);
+                                    this.setState((prevState, props) => {
+                                        prevState.weekendClientCategoryHouseCategoryPrice[clientCategoryId + "_" + houseCategoryId] = price
+                                    })
+                                }
+                            }
                         />
-                        <div>
-                            <button onClick={this.handleAddWeekendDateRange}>{'Добавить дату'}</button>
-                            <button onClick={this.handleDeleteWeekendDateRange}>{'Удалить дату'}</button>
-                            <button onClick={() => {this.setState({weekendsDates: getAllWeekendsInRange(this.state.priceGenerationRange)})}}>{'Установить все субботы и воскресения'}</button>
-                        </div>
-
-                        <select size="10"
-                             onChange={ (event) => this.setState({weekendSelectedDate: event.target.value}) }>
-                            { Object.values(this.state.weekendsDates)
-                                .map((range, index) => <option key={index}>{range[0].toLocaleDateString("ru")} - {range[1].toLocaleDateString("ru")}</option>) }
-                        </select>
-
-                        { Object.values(this.state.clientCategories).map((clientCategory, index) => (
-                            <div key={index}>
-                                <Card>
-                                    {clientCategory.name}
-                                    <div>
-                                        { Object.values(this.state.houseCategories).map((houseCategory, index) => (
-                                           <div key={index}>
-                                            <Label text={houseCategory.name}>
-                                                <input type='number' required className={"pt-input"} placeholder={'Цена'}
-                                                       onChange={(event) => {
-                                                           let price = parseInt(event.target.value);
-                                                           this.setState((prevState, props) => {
-                                                               weekendClientCategoryHouseCategoryPrice: prevState.weekendClientCategoryHouseCategoryPrice[clientCategory.id + "_" + houseCategory.id] = price
-                                                           })
-                                                       }}/>
-                                            </Label>
-                                           </div>
-                                        )) }
-                                    </div>
-                                </Card>
-                            </div>
-                            ))
-                        }
                     </Card>
                 </div>
-
 
                 <p/>
-                {/*weekday*/}
-                <div>
+
+                 <div>
                     <Card elevation={Elevation.TWO}>
-                        <h4>Будние дни</h4>
-                        <p>Выберите период</p>
-                        <DateRangePicker
-                            allowSingleDayRange={true}
-                            contiguousCalendarMonths={true}
-                            minDate={this.state.priceGenerationRange[0]}
-                            maxDate={this.state.priceGenerationRange[1]}
-                            onChange={pickedRange => this.setState({ weekdayPickedRange: pickedRange })}
-                            shortcuts={false}
+                        <PriceSetter
+                            title={"Будние дни"}
+                            range={this.state.priceGenerationRange}
+                            dates={this.state.weekdaysDates}
+                            clientCategories={this.state.clientCategories}
+                            houseCategories={this.state.houseCategories}
+
+                            onPickedRangeChanged={pickedRange => this.setState({ weekdayPickedRange: pickedRange })}
+                            onAddRange={this.handleAddWeekdayDateRange}
+                            onDeleteRange={this.handleDeleteWeekdayDateRange}
+                            onSelectedDateChanged={(event) => this.setState({weekdaySelectedDate: event.target.value})}
+                            onPriceChanged={(event, clientCategoryId, houseCategoryId) => {
+                                    const price = parseInt(event.target.value);
+                                    this.setState((prevState, props) => {
+                                        prevState.weekdayClientCategoryHouseCategoryPrice[clientCategoryId + "_" + houseCategoryId] = price
+                                    })
+                                }
+                            }
                         />
-                        <div>
-                            <button onClick={this.handleAddWeekdayDateRange}>{'Добавить дату'}</button>
-                            <button onClick={this.handleDeleteWeekdayDateRange}>{'Удалить дату'}</button>
-                            <button onClick={() => this.setState({weekdaysDates: [this.state.priceGenerationRange]})}>{'Установить все дни'}</button>
-                        </div>
-
-                        <select size="10"
-                             onChange={ (event) => this.setState({weekdaySelectedDate: event.target.value}) }>
-                            { Object.values(this.state.weekdaysDates)
-                                .map((range, index) => <option key={index}>{range[0].toLocaleDateString("ru")} - {range[1].toLocaleDateString("ru")}</option>) }
-                        </select>
-
-                        { Object.values(this.state.clientCategories).map((clientCategory, index) => (
-                            <div key={index}>
-                                <Card>
-                                    {clientCategory.name}
-                                    <div>
-                                        { Object.values(this.state.houseCategories).map((houseCategory, index) => (
-                                           <div key={index}>
-                                            <Label text={houseCategory.name}>
-                                                <input type='number' required className={"pt-input"} placeholder={'Цена'}
-                                                       onChange={(event) => {
-                                                          let price = parseInt(event.target.value);
-                                                           this.setState((prevState, props) => {
-                                                               weekdayClientCategoryHouseCategoryPrice: prevState.weekdayClientCategoryHouseCategoryPrice[clientCategory.id + "_" + houseCategory.id] = price
-                                                           })
-                                                       }}/>
-                                            </Label>
-                                           </div>
-                                        )) }
-                                    </div>
-                                </Card>
-                            </div>
-                            ))
-                        }
                     </Card>
                 </div>
+
 
                 <div>
                     <button onClick={this.handleSavePrices}>Сохранить</button>

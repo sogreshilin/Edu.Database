@@ -1,0 +1,110 @@
+* {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+select#house_category_select {
+  -webkit-border-radius: 2px;
+  -webkit-padding-end: 20px;
+  -webkit-padding-start: 2px;
+  -webkit-user-select: none;
+  border: 1px solid #ccc;
+  color: #555;
+  font-size: inherit;
+  background: none;
+  overflow: hidden;
+  padding: 5px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 300px;
+  cursor: pointer;
+}
+
+
+.filter-item {
+  padding: 5px 0;
+}
+
+.filter-item h5 {
+  font-weight: normal;
+}
+
+
+.house-card {
+  width: 32%;
+  margin: 0 10px 10px 0;
+  display: inline-block;
+  padding: 0;
+  border: 1px solid #dfdfdf;
+  transition: box-shadow 0.1s ease-in-out;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+
+.house-card:hover {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-shadow: 0 0 10px 4px #dfdfdf;
+  -webkit-box-shadow: 0 0 10px 4px #dfdfdf;
+  transition: box-shadow 0.1s ease-in-out
+}
+
+.house-card .book-house-button {
+  border: none;
+  border-radius: 3px;
+  background: #39C944;
+  color: #fff;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight:lighter;
+  font-size: 1.7rem;
+  padding: 6px;
+}
+
+.house-card-image-wrapper {
+  max-height: 150px;
+  overflow: hidden;
+}
+
+.house-card-image-wrapper img {
+  width: 100%;
+  height: 100%;
+}
+
+.house-card-info-wrapper {
+  padding: 4px;
+  box-shadow: 0 -1px 1px 1px #eee;
+  -webkit-box-shadow: 0 -1px 1px 1px #eee;
+  border-top: 1px solid #dfdfdf;
+  border-bottom: 1px solid #dfdfdf;
+}
+
+.house-category-tag {
+  background: #FFDA3E;
+  border: none;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  padding: 3px;
+  color: #fff;
+  text-transform: uppercase;
+  font-weight: normal;
+  font-size: 1.4rem;
+}
+
+.house-card-info-wrapper, .house-card-button-wrapper {
+  padding: 4px;
+}
+
+.house-card-button-wrapper {
+  float: right;
+}
+
+.house-card-description {
+  height: 100px;
+  overflow: scroll;
+  text-overflow: ellipsis;
+}
+.filter-results {
+  padding: 20px;
+}
+

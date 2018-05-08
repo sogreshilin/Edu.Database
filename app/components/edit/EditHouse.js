@@ -90,9 +90,9 @@ export default class EditHouse extends React.Component {
     handleSaveClicked() {
         axios.post("http://localhost:5000/api/edit/add_house", {
                 name: this.state.name,
-                categoryId: this.state.categoryId,
-                description: this.state.categoryId,
-                imageUrl: this.state.imageUrl
+                category_id: this.state.categoryId,
+                description: this.state.description,
+                image_url: this.state.imageUrl
             })
             .then(() => alert('Дом успешно сохранен в базу данных'))
             .catch(error => {

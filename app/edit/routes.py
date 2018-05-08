@@ -48,10 +48,10 @@ def add_house():
     content = request.json
     try:
         name = validate_text_non_empty(content['name'])
-        category = validate_house_category_id(int(content['categoryId']))
+        category = validate_house_category_id(int(content['category_id']))
     except (ValueError, KeyError) as error:
         return Response(str(error), status=400)
-    description = content.get('text', '')
+    description = content.get('description', '')
     image_url = content.get('image_url', '')
     db.session.add(House(name=name, house_category=category, description=description, image_url=image_url))
     db.session.commit()

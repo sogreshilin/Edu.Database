@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 import dateutil.parser
-from flask import request, Response
+from flask import request, Response, render_template
 
 from app import db
 from app.edit import bp
@@ -69,3 +69,9 @@ def add_house_category():
     db.session.add(HouseCategory(name=name, description=description))
     db.session.commit()
     return Response()
+
+
+@bp.route('/', defaults={'path': ''})
+@bp.route('/<path:path>')
+def catch_all(path):
+    return render_template('base.html')

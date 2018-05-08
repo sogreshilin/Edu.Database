@@ -4,6 +4,10 @@
     {% if title %}{{ title }}{% else %}{{ _("Recreation centers") }}{% endif %}
 {% endblock %}
 
+{% block body %}
+
+    <div id="main-container">
+
 {% block navbar %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bundle.css') }}" />
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
@@ -54,4 +58,10 @@
         <div id="app"></div>
         <script src="{{ url_for('static', filename='js/bundle.js') }}"></script>
     </div>
+
+{% endblock %}
+
+    <div class="push"></div>
+    </div>
+    <footer>MY FOOTER</footer>
 {% endblock %}

@@ -1,59 +1,43 @@
 import React from 'react';
-import { IProps, Icon, Tag, Intent, Card } from '@blueprintjs/core';
-import { DateRange, DateRangePicker, DateRangeInput } from "@blueprintjs/datetime";
+import { Card } from '@blueprintjs/core';
+import { DateRangeInput } from "@blueprintjs/datetime";
 import { Select } from "@blueprintjs/select";
 
 import { Route, Redirect } from 'react-router-dom';
 
 import { SessionStorage, StorageKeys } from "../Storage";
 
-import moment from 'moment';
-import classNames from "classnames";
+import styles from './house_filter.scss';
 import axios from "axios";
-
-// const FORMAT = "dddd, LL";
-
-// const MomentDate: React.SFC<{ date: Date; format?: string }> = ({ date, format = FORMAT }) => {
-//     const m = moment(date);
-//     if (m.isValid()) {
-//         return <Tag intent={Intent.PRIMARY}>{m.format(format)}</Tag>;
-//     } else {
-//         return <Tag minimal={true}>no date</Tag>;
-//     }
-// };
-//
-// const MomentDateRange: React.SFC<{ priceGenerationRange: DateRange; format?: string } & IProps> = ({
-//     className,
-//     priceGenerationRange: [start, end],
-//     format = FORMAT,
-// }) => (
-//     <div className={classNames("docs-date-priceGenerationRange", className)}>
-//         <MomentDate date={start} format={format} />
-//         <Icon icon="arrow-right" />
-//         <MomentDate date={end} format={format} />
-//     </div>
-// );
 
 const host = "http://localhost:5000";
 
 const dateToTimestamp = (date) => parseInt((date.getTime() / 1000).toFixed(0));
 
 const HouseCard = ({ houseId, categoryName, title, imageUrl, description, onSelect }) => (
-    <div>
-        <section>
-            <div>
-                <img src={ imageUrl } alt={ title } width={100} height={100} />
-            </div>
-            <div>
-                <h3>{ title }</h3>
-                <h4>{ categoryName }</h4>
-                <p>{ description }</p>
-            </div>
+    <div className={"house-card"}>
+        <section className={'house-card-image-wrapper'}>
+            <img src={ "https://cdn.torontolife.com/wp-content/uploads/2017/08/toronto-house-for-sale-53-burnhamthorpe-crescent-1-1200x628.jpg" } alt={ title } width={100} height={100} />
         </section>
-        <section>
-            <button onClick={() => onSelect(houseId)} >{"Перейти к заказу"}</button>
+        <section className={"house-card-info-section"}>
+            <div className={'house-card-info-wrapper'}>
+                <h3 className={'house-card-title'}>{ title }</h3>
+                <h4 className={'house-card-category'}><span className={'house-category-tag'}>{ categoryName }</span></h4>
+                <p className={'house-card-description'}>{ description }</p>
+            </div>
+            <div className={'house-card-button-wrapper'}>
+                <button className={"book-house-button"} onClick={() => onSelect(houseId)} >{"Перейти к заказу"}</button>
+            </div>
         </section>
     </div>
+);
+
+const LoadingError = ({ message }) => (
+    <Card>
+        <div className="loading-error-card">
+            <h2>{message}</h2>
+        </div>
+    </Card>
 );
 
 
@@ -61,6 +45,9 @@ export default class HouseFilter extends React.Component {
     constructor() {
         super();
         this.state = {
+            showLoadError: false,
+            redirectToOrderForm: false,
+
             minDate: new Date("2018-1-1"),
             maxDate: new Date("2018-12-31"),
             dateRange: [null, null],
@@ -71,7 +58,6 @@ export default class HouseFilter extends React.Component {
             freeHousesIds: new Set(),
             currentCategoryId: -1,
             filtered_houses: [],
-            redirectToOrderForm: false
         };
 
         this.filterHousesForCategory = this.filterHousesForCategory.bind(this);
@@ -85,7 +71,10 @@ export default class HouseFilter extends React.Component {
         axios.get(`${host}/api/houses`)
             .then(result => this.setState(result.data))
             .catch(error => {
-                console.error(error)
+                console.error(error);
+                this.setState({
+                    showLoadError: true
+                })
             })
     }
 
@@ -131,8 +120,6 @@ export default class HouseFilter extends React.Component {
         const house = this.state.houses[houseId];
 
 
-        console.log(this.state.dateRange);
-
         SessionStorage.put(StorageKeys.HouseId(), houseId);
         SessionStorage.put(StorageKeys.HouseName(), house.name);
         SessionStorage.put(StorageKeys.CategoryId(), house.category);
@@ -146,59 +133,70 @@ export default class HouseFilter extends React.Component {
     }
 
     render() {
+
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
                     <Redirect push to="/react/order" />
                 </Route>
                 ) : (
-
-            <div className={"houseFilter"}>
-                <Card>
-                    <DateRangePicker
-                        allowSingleDayRange={true}
-                        contiguousCalendarMonths={true}
-                        minDate={this.state.minDate}
-                        maxDate={this.state.maxDate}
-                        onChange={this.onDateRangeChanged}
-                        shortcuts={false}
-                    />
-
-
-                    {/*<MomentDateRange priceGenerationRange={this.state.dateRange} />*/}
-
-                    <select id={"house_category_select"}
-                            name={"house_category_select"}
-                            onChange={(event) => this.filterHousesForCategory(event.target.value)}
-                            >
-                        <option key={-1} value={-1}>-- Not Selected --</option>
-                        { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
-                    </select>
-
-                    <select id={"house_select"}
-                            name={"house_select"}
-                            disabled={this.state.currentCategoryId === -1}>
-                        <option value={-1}>-- Not Selected --</option>
-                        { this.state.filtered_houses.map(house => <option value={house.id}>{house.name}</option>) }
-                    </select>
-                </Card>
-
-                <Card>
-                    {
-                        this.state.filtered_houses.map(house =>
-                            <HouseCard houseId={house.id}
-                                       categoryName={this.state.categories[house.category].name}
-                                       title={house.name}
-                                       imageUrl={house.image_url}
-                                       description={house.description}
-                                       onSelect={this.onHouseChosen}
+            this.state.showLoadError ? (
+                <LoadingError message={"Ой, информация о домиках сейчас недоступна"} />
+            ) : (
+                <div className={"houseFilter"}>
+                    <Card elevation={1}>
+                        <h2>Выбор дома отдыха</h2>
+                        <div className={"filter-item"}>
+                            <h5>Даты запланированного отдыха</h5>
+                            <DateRangeInput
+                                value={ this.state.priceGenerationRange }
+                                formatDate={ date => date.toLocaleDateString("ru") }
+                                parseDate={ str => new Date(str) }
+                                shortcuts={ false }
+                                contiguousCalendarMonths={true}
+                                allowSingleDayRange={true}
+                                minDate={this.state.minDate}
+                                maxDate={this.state.maxDate}
+                                onChange={this.onDateRangeChanged}
                             />
+                        </div>
+                        <div className={"filter-item"}>
+                            <h5>Категория дома</h5>
+                            <select id={"house_category_select"}
+                                    name={"house_category_select"}
+                                    onChange={(event) => this.filterHousesForCategory(event.target.value)}
+                                    >
+                                <option key={-1} value={-1}>-- Не выбрано --</option>
+                                { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
+                            </select>
+                        </div>
+
+                    </Card>
+
+                    {
+                        this.state.filtered_houses.length === 0 ? (
+                            <p>На выбранные даты нет свободных домиков :(</p>
+                        ) : (
+                            <div className={'filter-results'}>
+                                <h3>Результаты поиска</h3>
+                                {
+                                    this.state.filtered_houses.map(house =>
+                                        <HouseCard key={house.id}
+                                                   houseId={house.id}
+                                                   categoryName={this.state.categories[house.category].name}
+                                                   title={house.name}
+                                                   imageUrl={house.image_url}
+                                                   description={house.description}
+                                                   onSelect={this.onHouseChosen}
+                                        />
+                                    )
+                                }
+                            </div>
                         )
                     }
-                </Card>
 
-            </div>
+                </div>
             )
-        );
+        ));
     }
 }

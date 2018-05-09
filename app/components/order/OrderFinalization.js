@@ -7,6 +7,7 @@ import { StorageKeys, getFromStorageOrThrow } from "../Storage";
 import axios from 'axios';
 
 import styles from './order.scss';
+import {server} from "../../index";
 
 
 const mockSessionStorage = () => {
@@ -26,7 +27,16 @@ const emailRegEx = new RegExp(emailRegExPattern);
 
 const isEmailValid = (email) => emailRegEx.test(email);
 
-const formatPhoneNumber = (phoneNumber) => phoneNumber.split('').filter(_ => _ === '+' ||  _.match(/\d/) !== null).join('');
+const serializePhoneNumber = (phoneNumber) => phoneNumber.split('').filter(_ => _ === '+' ||  _.match(/\d/) !== null).join('');
+
+const deserializePhoneNumber = (rawPhone) =>
+    '+' +
+    rawPhone.charAt(0) + " (" +
+    rawPhone.substring(1, 4) + ") " +
+    rawPhone.substring(4, 7) + "-" +
+    rawPhone.substring(7, 9) + "-" +
+    rawPhone.substring(9, 11);
+
 
 const toInt = (value) => Number.parseInt(value);
 
@@ -44,16 +54,21 @@ class FormKeys {
 }
 
 
-const GeneralOrderInformation = ({ houseCategory, houseNumber, dateFrom, dateTo }) => (
-    <section className={"generalOrderInfoSection"}>
-        <h3>Информация о заказе</h3>
-        <p>Категория дома отдыха: {houseCategory}</p>
-        <p>Номер дома: {houseNumber}</p>
-        {/*<p>Время пребывания: {dateFrom} -- {dateTo}</p>*/}
-        <p>Время пребывания: {dateFrom.toDateString()} -- {dateTo.toDateString()}</p>
-        <p>Cтоимость: <span>{0}</span>&#x20bd;</p>
-    </section>
-);
+const GeneralOrderInformation = ({ houseCategory, houseNumber, dateFrom, dateTo, price }) => {
+    const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+    const from = new Date(dateFrom).toLocaleDateString('ru', options);
+    const to = new Date(dateTo).toLocaleDateString('ru', options);
+    return (
+        <section className={"generalOrderInfoSection"}>
+            <h3>Информация о заказе</h3>
+            <p>Категория дома отдыха: {houseCategory}</p>
+            <p>Номер дома: {houseNumber}</p>
+            {/*<p>Время пребывания: {dateFrom} -- {dateTo}</p>*/}
+            <p>Время пребывания: {from} -- {to}</p>
+            <p>Cтоимость: <span>{price}</span>&#8376;</p>
+        </section>
+    )
+};
 
 
 export default class OrderFinalization extends React.Component {
@@ -70,6 +85,7 @@ export default class OrderFinalization extends React.Component {
             second_name: "",
             third_name: "",
             phone: "",
+            prices: 0,
             isCompanyWorker: false,
             invalidFields: new Set(),
         };
@@ -81,6 +97,8 @@ export default class OrderFinalization extends React.Component {
     }
 
     componentWillMount() {
+        const prices = JSON.parse(getFromStorageOrThrow(StorageKeys.Prices()));
+        console.log("prices: " + prices);
         try {
             this.setState({
                 category_id:  toInt(getFromStorageOrThrow(StorageKeys.CategoryId())),
@@ -89,6 +107,7 @@ export default class OrderFinalization extends React.Component {
                 house_name: getFromStorageOrThrow(StorageKeys.HouseName()),
                 from_timestamp: toInt(getFromStorageOrThrow(StorageKeys.FromTimestamp())),
                 to_timestamp: toInt(getFromStorageOrThrow(StorageKeys.ToTimestamp())),
+                prices: JSON.parse(getFromStorageOrThrow(StorageKeys.Prices())),
                 email: "",
                 first_name: "",
                 second_name: "",
@@ -96,12 +115,31 @@ export default class OrderFinalization extends React.Component {
                 phone: "",
                 isCompanyWorker: false,
             });
+            console.log('call /api/current_user');
+            axios.get(server + '/api/current_user')
+                .then(result => {
+                    if (result.data.is_authenticated) {
+                        this.setState({
+                            first_name: result.data.first_name,
+                            second_name: result.data.last_name,
+                            third_name: result.data.middle_name,
+                            phone: deserializePhoneNumber(result.data.phone),
+                            email: result.data.email,
+                            isCompanyWorker: parseInt(result.data.category_id) === 1
+                        })
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    this.setState({
+                        showLoadError: true
+                    })
+                })
         } catch (error) {
             console.error(error);
             alert("Failed to initialize components")
         }
     }
-
 
     onCheckboxClicked() {
         this.setState({
@@ -113,13 +151,14 @@ export default class OrderFinalization extends React.Component {
         if (this.state.invalidFields.size > 0) {
             return;
         }
+        console.log("phone: " + this.state.phone);
 
         axios.post("http://localhost:5000/api/book", {
                 house_id: this.state.house_id,
                 from_date: this.state.from_timestamp,
                 to_date: this.state.to_timestamp,
                 email: this.state.email,
-                phone: formatPhoneNumber(this.state.phone),
+                phone: serializePhoneNumber(this.state.phone),
                 first_name: this.state.first_name,
                 last_name: this.state.second_name,
                 middle_name: this.state.third_name,
@@ -181,13 +220,14 @@ export default class OrderFinalization extends React.Component {
                                              houseNumber={this.state.house_id}
                                              dateFrom={new Date(this.state.from_timestamp * 1000)}
                                              dateTo={new Date(this.state.to_timestamp * 1000)}
+                                             price={this.state.prices[this.state.isCompanyWorker ? "1" : "2"]}
                     />
                 </Card>
                 <Card>
                     <section className={"contactInfoSection"}>
                         <h3>Контактные данные</h3>
                         <Label text={"Номер телефона"} helperText={"*"}>
-                            <PhoneInput disableDropdown onChange={(value) => this.setState({phone: value})}/>
+                            <PhoneInput disableDropdown value={this.state.phone} onChange={(value) => this.setState({phone: value})}/>
                         </Label>
                         <Label text={"Email"} helperText={"*"}>
                             <input type={"email"}

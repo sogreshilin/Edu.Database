@@ -6,6 +6,7 @@ export class StorageKeys {
     static HouseName() { return "house_name"; }
     static FromTimestamp() { return "from_timestamp"; }
     static ToTimestamp() { return "to_timestamp"; }
+    static Prices() { return "prices"; }
 
 }
 

@@ -14,7 +14,7 @@ const host = "http://localhost:5000";
 
 const dateToTimestamp = (date) => parseInt((date.getTime() / 1000).toFixed(0));
 
-const HouseCard = ({ houseId, categoryName, title, imageUrl, description, onSelect }) => (
+const HouseCard = ({ houseId, price, categoryName, title, imageUrl, description, onSelect }) => (
     <div className={"house-card"}>
         <section className={'house-card-image-wrapper'}>
             <img src={ "https://cdn.torontolife.com/wp-content/uploads/2017/08/toronto-house-for-sale-53-burnhamthorpe-crescent-1-1200x628.jpg" } alt={ title } width={100} height={100} />
@@ -24,6 +24,7 @@ const HouseCard = ({ houseId, categoryName, title, imageUrl, description, onSele
                 <h3 className={'house-card-title'}>{ title }</h3>
                 <h4 className={'house-card-category'}><span className={'house-category-tag'}>{ categoryName }</span></h4>
                 <p className={'house-card-description'}>{ description }</p>
+                <p>{ "Стоимость: " + price }</p>
             </div>
             <div className={'house-card-button-wrapper'}>
                 <button className={"book-house-button"} onClick={() => onSelect(houseId)} >{"Перейти к заказу"}</button>
@@ -58,6 +59,7 @@ export default class HouseFilter extends React.Component {
             freeHousesIds: new Set(),
             currentCategoryId: -1,
             filtered_houses: [],
+            prices: {}
         };
 
         this.filterHousesForCategory = this.filterHousesForCategory.bind(this);
@@ -92,7 +94,9 @@ export default class HouseFilter extends React.Component {
             to_date: dateToTimestamp(rangeEnd)
         })
             .then(({ data }) => {
+                console.log(data);
                 this.setState({
+                    prices: data.prices,
                     freeHousesIds: new Set(data.houses),
                     dateRange: [rangeStart, rangeEnd]
                 }, () => this.filterHousesForCategory(this.state.currentCategoryId))
@@ -126,6 +130,8 @@ export default class HouseFilter extends React.Component {
         SessionStorage.put(StorageKeys.CategoryName(), this.state.categories[house.category].name);
         SessionStorage.put(StorageKeys.FromTimestamp(), dateToTimestamp(this.state.dateRange[0]));
         SessionStorage.put(StorageKeys.ToTimestamp(), dateToTimestamp(this.state.dateRange[1]));
+        SessionStorage.put(StorageKeys.Prices(), JSON.stringify(this.state.prices[houseId]));
+
 
         this.setState({
             redirectToOrderForm: true
@@ -133,7 +139,6 @@ export default class HouseFilter extends React.Component {
     }
 
     render() {
-
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
@@ -187,6 +192,7 @@ export default class HouseFilter extends React.Component {
                                                    title={house.name}
                                                    imageUrl={house.image_url}
                                                    description={house.description}
+                                                   price={this.state.prices[house.id][2]}
                                                    onSelect={this.onHouseChosen}
                                         />
                                     )

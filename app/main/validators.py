@@ -1,7 +1,11 @@
 import re
 
 from _datetime import datetime
-from app.models import HouseCategory, House, ClientCategory
+
+import pytz
+from dateutil.tz import tzlocal
+
+from app.models import HouseCategory, House, ClientCategory, Client, Order
 from validate_email import validate_email as is_email_valid
 
 
@@ -27,7 +31,7 @@ def validate_house_id(id):
 
 
 def validate_date(date):
-    if date < datetime.today().date():
+    if date < datetime.now(pytz.utc):
         raise ValueError(f'Check in date {date} is earlier than today')
     else:
         return date
@@ -57,3 +61,19 @@ def validate_phone(phone):
     if phone_regex.match(phone) is None:
         raise ValueError(f'Phone {phone} does not match')
     return phone
+
+
+def validate_client_id(id):
+    client = Client.query.filter_by(client_id=id).first()
+    if client is None:
+        raise ValueError(f'Client with specified id={id} does not exist')
+    else:
+        return client
+
+
+def validate_order_id(id):
+    order = Order.query.filter_by(order_id=id).first()
+    if order is None:
+        raise ValueError(f'Order with specified id={id} does not exist')
+    else:
+        return order

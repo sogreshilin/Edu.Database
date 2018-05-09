@@ -1,6 +1,7 @@
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import and_, func
+from dateutil.tz import tzlocal
+from sqlalchemy import and_, func, or_
 
 from app import db
 from app.main import bp
@@ -10,50 +11,16 @@ from flask_babel import _
 from flask_login import login_required, current_user
 
 from app.main.validators import *
-from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice
+from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus
 from app.main.email import send_book_confirmation_email
 
 
-# list can be passed
-def validate_price_request(req):
-    house_category_id = request.args.get('house')
-    from_date = date.fromtimestamp(int(request.args.get('from')))
-    to_date = date.fromtimestamp(int(request.args.get('to')))
-    client_category_id = int(request.args.get('client'))
-    if client_category_id is None:
-        client_category_id = ClientCategory.NON_COMPANY_WORKER
-
-    validate_client_category_id(client_category_id)
-    validate_house_category_id(house_category_id)
-    validate_date(from_date)
-    validate_date(to_date)
-    validate_date_earlier(from_date, to_date)
-
-    return house_category_id, client_category_id, from_date, to_date
-
-
-def query_house_and_apply(fun):
-    try:
-        house_category_id, client_category_id, from_date, to_date = validate_price_request(request)
-
-    except ValueError as error:
-        return Response(str(error), status=400)
-
+def get_house_total_cost(house_category_id, client_category, from_date, to_date):
+    print('get_house_total_cost(', house_category_id, ',', from_date, ',', to_date, ')')
     condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
-                 (HousePrice.house_category_id == house_category_id) &
-                 (HousePrice.client_category == ClientCategory(client_category_id)))
+                 (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
 
-    return db.session.query(fun(HousePrice.price)).filter(condition).first()
-
-
-@bp.route('/api/house/min_price')
-def get_min_house_price():
-    return jsonify({"min_price": query_house_and_apply(func.min)})
-
-
-@bp.route('/api/house/total_cost')
-def get_house_total_cost():
-    return jsonify({"total_cost": query_house_and_apply(func.sum)})
+    return db.session.query(func.sum(HousePrice.price)).filter(condition).first()[0]
 
 
 @bp.route('/api/houses')
@@ -65,7 +32,7 @@ def get_houses():
 
     response = {
         "houses": {
-            house.house_id : {
+            house.house_id: {
                 "id": house.house_id,
                 "name": house.name,
                 "description": house.description,
@@ -106,20 +73,106 @@ def get_client_categories():
 @bp.route('/api/free_houses', methods=['POST'])
 def get_free_houses():
     content = request.json
-    print(content)
     try:
-        from_date = validate_date(date.fromtimestamp(int(content['from_date'])))
-        to_date = validate_date(date.fromtimestamp(int(content['to_date'])))
+        from_date = validate_date(datetime.fromtimestamp(int(content['from_date'])))
+        to_date = validate_date(datetime.fromtimestamp(int(content['to_date'])))
         validate_date_earlier(from_date, to_date)
     except ValueError as error:
         print(error)
         return Response(str(error), status=400)
-    query = db.session.query(Order.house_id).filter(and_(Order.check_in_time.between(from_date, to_date),
-                                        Order.check_out_time.between(from_date, to_date)))
-    subquery = db.session.query(House.house_id)
-    free_houses = list(map(lambda elem: elem[0], subquery.filter(~House.house_id.in_(query)).all()))
-    print('response_content:', free_houses)
-    return jsonify({"houses": free_houses})
+    occupied_house_ids = db.session.query(Order.house_id) \
+        .filter(or_(
+            and_(from_date <= Order.check_in_time_expected, Order.check_in_time_expected <= to_date),
+            and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date)))
+    free_houses = list(map(lambda elem: elem[0], db.session.query(House.house_id, House.house_category_id)
+                           .filter(~House.house_id.in_(occupied_house_ids)).all()))
+    house_and_category = db.session.query(House.house_id, House.house_category_id).filter(~House.house_id.in_(occupied_house_ids)).all()
+    print(house_and_category)
+
+    house_prices = dict()
+    for house_id, house_category_id in house_and_category:
+        prices = dict()
+        for client_category in list(ClientCategory):
+            prices[client_category.value] = get_house_total_cost(house_category_id, client_category, from_date, to_date)
+        house_prices[house_id] = prices
+    print(house_prices)
+
+    return jsonify({'houses': free_houses, 'prices': house_prices})
+
+
+@bp.route('/api/current_user')
+def api_current_user():
+    if current_user.is_authenticated:
+        response = {
+            'is_authenticated': True,
+            'id': current_user.client_id,
+            'category_id': current_user.client_category.value,
+            'last_name': current_user.last_name,
+            'first_name': current_user.first_name,
+            'middle_name': current_user.middle_name,
+            'phone': current_user.phone_number,
+            'email': current_user.email
+        }
+    else:
+        response = {
+            'is_authenticated': False
+        }
+    return jsonify(response)
+
+
+@bp.route('/api/upcoming_orders')
+def get_upcoming_orders():
+    orders = {order.order_id: order.to_json() for order in Order.query.all()}
+    return jsonify(orders)
+
+
+@bp.route('/api/reject_company_worker', methods=['POST'])
+def reject_company_worker():
+    # todo: check that current_user is administrator
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        order.client_category_confirmed = False
+        db.session.commit()
+    # todo: add outstanding payment
+    except ValueError as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
+
+
+@bp.route('/api/confirm_company_worker', methods=['POST'])
+def confirm_company_worker():
+    # todo: check that current_user is administrator
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        order.client_category_confirmed = True
+        db.session.commit()
+    except ValueError as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
+
+
+@bp.route('/api/confirm_check_in', methods=['POST'])
+def confirm_check_in():
+    # todo: check that current_user is administrator
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        order.check_in_time_actual = datetime.now(tzlocal())
+        db.session.commit()
+    except ValueError as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
+
+
+@bp.route('/api/confirm_check_out', methods=['POST'])
+def confirm_check_out():
+    # todo: check that current_user is administrator
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        order.check_out_time_actual = datetime.now(tzlocal())
+        db.session.commit()
+    except ValueError as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
 
 
 @bp.route('/api/book', methods=['POST'])
@@ -128,12 +181,11 @@ def api_book():
     print(content)
     try:
         house = validate_house_id(int(content['house_id']))
-        from_date = validate_date(date.fromtimestamp(int(content['from_date'])))
-        to_date = validate_date(date.fromtimestamp(int(content['to_date'])))
+        from_date = validate_date(datetime.fromtimestamp(int(content['from_date']), tzlocal()))
+        to_date = validate_date(datetime.fromtimestamp(int(content['to_date']), tzlocal()))
         validate_date_earlier(from_date, to_date)
         client_category = ClientCategory.COMPANY_WORKER \
-            if content['is_company_worker'] == 'True' \
-            else ClientCategory.NON_COMPANY_WORKER
+            if content['is_company_worker'] else ClientCategory.NON_COMPANY_WORKER
         last_name = validate_text_non_empty(content['last_name'])
         first_name = validate_text_non_empty(content['first_name'])
         middle_name = content['middle_name']
@@ -146,15 +198,15 @@ def api_book():
     client = Client.query.filter_by(email=email).first()
     if client is None:
         client = Client(client_category=client_category,
-            first_name=first_name,
-            last_name=last_name,
-            middle_name=middle_name,
-            phone_number=phone,
-            email=email)
+                        first_name=first_name,
+                        last_name=last_name,
+                        middle_name=middle_name,
+                        phone_number=phone,
+                        email=email)
         db.session.add(client)
         db.session.commit()
 
-    order = Order(client=client, house=house, check_in_time=from_date, check_out_time=to_date)
+    order = Order(client=client, house=house, check_in_time_expected=from_date, check_out_time_expected=to_date, status=OrderStatus.BOOKED)
     db.session.add(order)
     db.session.commit()
 
@@ -166,28 +218,3 @@ def api_book():
 @login_required
 def index():
     return render_template('index.html', title=_('Recreation Centers'))
-
-
-@bp.route('/order', methods=['POST', 'GET'])
-@login_required
-def order():
-    form = OrderForm()
-    form.house_category.choices = [(category.house_category_id, category.name)
-                                   for category in HouseCategory.query.order_by('name')]
-    form.house.choices = [(house.house_id, house.name) for house in House.query.order_by('name')]
-    if form.validate_on_submit():
-        house = House.query.filter_by(house_id=form.house.data).first()
-        client = current_user
-        order = Order(status_id=1, client_id=client.client_id, house_id=house.house_id,
-            check_in_time=form.check_in.data, check_out_time=form.check_out.data)
-        db.session.add(order)
-        db.session.commit()
-        flash(_('House successfully ordered'))
-        return redirect(url_for('main.index'))
-    return render_template('main/order.html', title='Book house', form=form)
-
-
-@bp.route('/profile/orders')
-@login_required
-def orders():
-    return render_template('main/client_orders.html', client=current_user)

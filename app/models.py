@@ -52,8 +52,9 @@ class Client(UserMixin, db.Model):
         return Client.query.get(id)
 
     def __repr__(self):
-        return 'Client-{} : {}, {} {}, {}, {}'.format(self.client_id, self.client_category,
-                                                      self.first_name, self.last_name, self.phone_number, self.email)
+        return 'Client-{} client_category={}, name={} {} {}, phone={}, email={}'.format(self.client_id, self.client_category,
+                                                                            self.last_name, self.first_name, self.middle_name,
+                                                                            self.phone_number, self.email)
 
 
 class OrderStatus(enum.Enum):
@@ -95,7 +96,7 @@ class HousePrice(db.Model):
     price = db.Column(db.Integer, nullable=False)
 
     def __repr__(self) -> str:
-        return f"{self.date}, {self.client_category}, {self.house_category_id}, {self.price}"
+        return f"{self.date}, {self.client_category}, {self.house_category_id}, {self.prices}"
 
 
 class Order(db.Model):
@@ -103,12 +104,55 @@ class Order(db.Model):
     order_id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Enum(OrderStatus))
     client_id = db.Column(db.Integer, db.ForeignKey('client.client_id'))
+    client_category_confirmed = db.Column(db.Boolean, default=None)
     house_id = db.Column(db.Integer, db.ForeignKey('house.house_id'))
     house = db.relation('House', backref='orders')
     booking_time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    check_in_time = db.Column(db.DateTime, index=True)
-    check_out_time = db.Column(db.DateTime, index=True)
     checked_in = db.Column(db.Boolean, default=False)
+
+    check_in_time_expected = db.Column(db.DateTime, index=True)
+    check_out_time_expected = db.Column(db.DateTime, index=True)
+    check_in_time_actual = db.Column(db.DateTime, default=None)
+    check_out_time_actual = db.Column(db.DateTime, default=None)
+
+    def to_json(self):
+        return {
+            'id': self.order_id,
+            'status': self.status.name,
+            'client': {
+                'id': self.client.client_id,
+                'category_id': self.client.client_category.value,
+                'category_name': self.client.client_category.name,
+                'category_confirmed': self.client_category_confirmed,
+                'last_name': self.client.last_name,
+                'first_name': self.client.first_name,
+                'middle_name': self.client.middle_name,
+                'phone': self.client.phone_number,
+                'email': self.client.email,
+
+            },
+            'house': {
+                'id': self.house.house_id,
+                'name': self.house.name,
+                'description': self.house.description,
+                'category_id': self.house.house_category_id,
+                'category_name': self.house.house_category.name
+            },
+            'time': {
+                'booking': self.booking_time,
+                'check_in_expected': self.check_in_time_expected,
+                'check_out_expected': self.check_out_time_expected,
+                'check_in_actual': self.check_in_time_actual,
+                'check_out_actual': self.check_out_time_actual,
+            },
+        }
+
+    def __repr__(self) -> str:
+        return f'(Order-{self.order_id} status={self.status} ' \
+               f'client_id={self.client_id} house_id={self.house_id} ' \
+               f'house={self.house} booking_time={self.booking_time} ' \
+               f'check_in_time={self.check_in_time_expected} check_out_time={self.check_out_time_expected} ' \
+               f'checked_in={self.checked_in})'
 
 
 class RecreationCenter(db.Model):

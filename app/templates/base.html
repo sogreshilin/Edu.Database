@@ -27,7 +27,7 @@
                 <ul class="nav navbar-nav">
                     <li><a href="{{ url_for('main.index') }}">{{ _("Home") }}</a></li>
                     {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('main.order') }}">{{ _("Book") }}</a></li>
+                    <li><a href="{{ '/react/filter' }}">{{ _("Book") }}</a></li>
                     {% endif %}
                 </ul>
                 <ul class="nav navbar-nav navbar-right">

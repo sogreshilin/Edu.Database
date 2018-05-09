@@ -2,26 +2,54 @@ import React from "react";
 import axios from "axios/index";
 import {server} from "../../index";
 import {Redirect, Route} from "react-router-dom";
+import { Card } from '@blueprintjs/core';
 
-const OrderCard = ({ order, onClick }) => (
-    <div>
-        <section>
-            <h3> {'Заказ №' + order.id} </h3>
-            <p> {'Статус: ' + order.status} </p>
-            <p> {'Категория дома: ' + order.house.category} </p>
-            <p> {'Дом: ' + order.house.name}</p>
-            <p> {'С ' + order.time.checkIn + ' по ' + order.time.checkOut} </p>
-            <p> {'Клиент: ' +
-                order.client.lastName + ' ' +
-                order.client.firstName + ' ' +
-                order.client.secondName
-            } </p>
-        </section>
-        <section>
-            <button onClick={() => onClick(order.id)} >{'Подробнее'}</button>
-        </section>
-    </div>
-);
+import styles from './order_filter.scss';
+import {SessionStorage} from "../Storage";
+
+const OrderCard = ({ order, onClick }) => {
+    const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
+    const from_date = new Date(order.time.check_in).toLocaleDateString('ru', options);
+    const to_date = new Date(order.time.check_out).toLocaleDateString('ru', options);
+    const client =
+        order.client.last_name + ' ' +
+        order.client.first_name.charAt(0) + '.' +
+        (order.client.middle_name ? order.client.middle_name.charAt(0) + '.' : '');
+    return (<div>
+        <h3>
+            {'Заказ №' + order.id}
+        </h3>
+        <table className={'order-card'}>
+            <tbody>
+                <tr>
+                    <td>{'Статус'}</td>
+                    <td>{order.status}</td>
+                </tr>
+                <tr>
+                    <td>{'Категория дома'}</td>
+                    <td>{order.house.category_name}</td>
+                </tr>
+                <tr>
+                    <td>{'Дом'}</td>
+                    <td>{order.house.name}</td>
+                </tr>
+                <tr>
+                    <td>{'Дата въезда'}</td>
+                    <td>{from_date}</td>
+                </tr>
+                <tr>
+                    <td>{'Дата выезда'}</td>
+                    <td>{to_date}</td>
+                </tr>
+                <tr>
+                    <td>{'Клиент'}</td>
+                    <td>{client}</td>
+                </tr>
+            </tbody>
+        </table>
+        <button onClick={() => onClick(order.id)}>{'Подробнее'}</button>
+    </div>)
+};
 
 export default class OrdersFilter extends React.Component {
     constructor() {
@@ -35,16 +63,22 @@ export default class OrdersFilter extends React.Component {
     };
 
     onOrderChosen(orderId) {
-        const order = this.state.orders[orderId];
-
+        SessionStorage.put('order', JSON.stringify(this.state.orders[orderId.toString()]));
         this.setState({
-            redirectToOrderForm: true
+            redirectToOrderForm: true,
+            chosenOrderId: orderId
         })
     };
 
     componentDidMount() {
         axios.get(server + '/api/upcoming_orders')
-            .then(result => this.setState(result.data))
+            .then(result => {
+                    console.log('result.data = ' + result.data);
+                    this.setState({
+                        orders: result.data
+                    })
+                }
+            )
             .catch(error => {
                 console.error(error)
             })
@@ -54,15 +88,24 @@ export default class OrdersFilter extends React.Component {
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
-                    <Redirect push to={"react/admin/order/" + this.state.chosenOrderId} />
+                    <Redirect push to={"/react/admin/order_summary"} />
                 </Route>
             ) : (
                 <div>
-                    <div>
-                        {
-                            this.state.orders.map(order => <OrderCard order={order} onClick={this.onOrderChosen}/>)
-                        }
-                    </div>
+                    {
+                        Object.values(this.state.orders)
+                            .map(order =>
+                                <div key={order.id}>
+                                    <Card>
+                                        <OrderCard
+                                            order={order}
+                                            onClick={this.onOrderChosen}
+                                        />
+                                    </Card>
+                                    <p/>
+                                </div>
+                            )
+                    }
                 </div>
             )
         )

@@ -2,15 +2,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField, PasswordField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from flask_babel import _, lazy_gettext as _l
-from app.models import Client
+from app.models import Client, ClientCategory
 
 
 class RegistrationForm(FlaskForm):
-    first_name = StringField(_l('First name'), validators=[DataRequired()])
     last_name = StringField(_l('Last name'), validators=[DataRequired()])
+    first_name = StringField(_l('First name'), validators=[DataRequired()])
+    middle_name = StringField(_l('Middle name'))
     phone_number = StringField(_l('Phone number'), validators=[DataRequired()])
     email = StringField(_l('E-mail'), validators=[DataRequired(), Email()])
-    category = SelectField(_l('Category'), choices=[('2', _('Company worker')), ('1', _('Non-company worker'))])
+    client_categories = [(str(category.value), category.name) for category in list(ClientCategory)]
+    print('client_categories = ', client_categories)
+    category = SelectField(_l('Category'), choices=client_categories)
     password = PasswordField(_l('Password'), validators=[DataRequired()])
     password_repeat = PasswordField(_l('Repeat password'), validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField(_l('Register'))

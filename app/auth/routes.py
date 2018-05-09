@@ -15,12 +15,14 @@ def register():
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        category = ClientCategory.query.filter_by(name=form.category.data).first()
-        client = Client(category=category,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            phone_number=form.phone_number.data,
-            email=form.email.data)
+        category = ClientCategory(int(form.category.data))
+        middle_name = form.middle_name.data if form.middle_name.data != '' else None
+        client = Client(client_category=category,
+                        last_name=form.last_name.data,
+                        first_name=form.first_name.data,
+                        middle_name=middle_name,
+                        phone_number=form.phone_number.data,
+                        email=form.email.data)
         client.set_password(form.password.data)
         db.session.add(client)
         db.session.commit()

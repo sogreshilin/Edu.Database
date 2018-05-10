@@ -88,7 +88,7 @@ export default class OrdersFilter extends React.Component {
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
-                    <Redirect push to={"/react/admin/order_summary"} />
+                    <Redirect push to={"/admin/order_summary"} />
                 </Route>
             ) : (
                 <div>

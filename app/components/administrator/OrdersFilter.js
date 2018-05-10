@@ -9,8 +9,8 @@ import {SessionStorage} from "../Storage";
 
 const OrderCard = ({ order, onClick }) => {
     const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
-    const from_date = new Date(order.time.check_in).toLocaleDateString('ru', options);
-    const to_date = new Date(order.time.check_out).toLocaleDateString('ru', options);
+    const from_date = new Date(order.time.check_in_expected).toLocaleDateString('ru', options);
+    const to_date = new Date(order.time.check_out_expected).toLocaleDateString('ru', options);
     const client =
         order.client.last_name + ' ' +
         order.client.first_name.charAt(0) + '.' +
@@ -63,7 +63,7 @@ export default class OrdersFilter extends React.Component {
     };
 
     onOrderChosen(orderId) {
-        SessionStorage.put('order', JSON.stringify(this.state.orders[orderId.toString()]));
+        SessionStorage.put('order', JSON.stringify(this.state.orders[orderId]));
         this.setState({
             redirectToOrderForm: true,
             chosenOrderId: orderId

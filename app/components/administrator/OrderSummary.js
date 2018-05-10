@@ -28,7 +28,7 @@ export default class OrderSummary extends React.Component {
         this.confirmCheckOut = this.confirmCheckOut.bind(this);
     }
 
-    componentDidMount() {
+    componentWillMount() {
         const order = JSON.parse(getFromStorageOrThrow('order'));
 
         try {
@@ -192,7 +192,7 @@ export default class OrderSummary extends React.Component {
                     </tr>
                     <tr>
                         <td>{'Ожидаемое время'}</td>
-                        <td>{this.state.fromDate}</td>
+                        <td>{this.state.from_date_expected}</td>
                     </tr>
                     <tr>
                         <td>{'Фактическое время заселения'}</td>
@@ -211,7 +211,7 @@ export default class OrderSummary extends React.Component {
                     </tr>
                     <tr>
                         <td>{'Ожидаемое время'}</td>
-                        <td>{this.state.toDate}</td>
+                        <td>{this.state.to_date_expected}</td>
                     </tr>
                     <tr>
                         <td>{'Фактическое время'}</td>

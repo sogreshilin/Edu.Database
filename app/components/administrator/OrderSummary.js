@@ -1,9 +1,9 @@
 import React from "react";
 import axios from "axios/index";
-import {server} from "../../index";
+import { server } from "../../index";
 import { getFromStorageOrThrow } from "../Storage";
 
-const options = {
+export const options = {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -28,8 +28,9 @@ export default class OrderSummary extends React.Component {
         this.confirmCheckOut = this.confirmCheckOut.bind(this);
     }
 
-    componentWillMount() {
+    componentDidMount() {
         const order = JSON.parse(getFromStorageOrThrow('order'));
+
         try {
             this.setState({
                 order: order,
@@ -191,7 +192,7 @@ export default class OrderSummary extends React.Component {
                     </tr>
                     <tr>
                         <td>{'Ожидаемое время'}</td>
-                        <td>{this.state.from_date_expected}</td>
+                        <td>{this.state.fromDate}</td>
                     </tr>
                     <tr>
                         <td>{'Фактическое время заселения'}</td>
@@ -210,7 +211,7 @@ export default class OrderSummary extends React.Component {
                     </tr>
                     <tr>
                         <td>{'Ожидаемое время'}</td>
-                        <td>{this.state.to_date_expected}</td>
+                        <td>{this.state.toDate}</td>
                     </tr>
                     <tr>
                         <td>{'Фактическое время'}</td>

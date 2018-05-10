@@ -81,9 +81,9 @@ def get_free_houses():
         print(error)
         return Response(str(error), status=400)
     occupied_house_ids = db.session.query(Order.house_id) \
-        .filter(or_(
+        .filter(and_(Order.status != OrderStatus.CANCELED, or_(
             and_(from_date <= Order.check_in_time_expected, Order.check_in_time_expected <= to_date),
-            and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date)))
+            and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date))))
     free_houses = list(map(lambda elem: elem[0], db.session.query(House.house_id, House.house_category_id)
                            .filter(~House.house_id.in_(occupied_house_ids)).all()))
     house_and_category = db.session.query(House.house_id, House.house_category_id).filter(~House.house_id.in_(occupied_house_ids)).all()
@@ -218,3 +218,42 @@ def api_book():
 @login_required
 def index():
     return render_template('index.html', title=_('Recreation Centers'))
+
+
+@bp.route('/api/orders/<int:id>')
+def order_review(id: int):
+    if not isinstance(id, int) or id <= 0:
+        return Response("<order id> must be a positive integer", status=400)
+
+    order_info = Order.query.filter_by(order_id=id).first()
+
+    if order_info is not None:
+        return jsonify(order_info.to_json())
+    else:
+        return Response(status=404)
+
+
+@bp.route('/api/orders/<int:order_id>/cancel', methods=['PATCH'])
+def cancel_order(order_id: int):
+    order_info = Order.query.filter_by(order_id=order_id).first()
+
+    if order_info is not None:
+        current_order_status = OrderStatus(order_info.status.value)
+        print("Current order status:", current_order_status)
+        response = Response(status=200)
+
+        if current_order_status == OrderStatus.BOOKED:
+            order_info.status = OrderStatus.CANCELED
+            db.session.commit()
+        elif current_order_status == OrderStatus.ACTIVE:
+            response = Response("Active order cannot be cancelled", status=409)
+        elif current_order_status == OrderStatus.CANCELED:
+            response = Response("Order is already cancelled", status=409)
+        elif current_order_status == OrderStatus.PAYED:
+            response = Response(status=501)
+        else:
+            response = Response("Unsupported order status", status=500)
+
+        return response
+    else:
+        return Response(status=404)

@@ -30,8 +30,8 @@ def validate_house_id(id):
         return house
 
 
-def validate_date(date):
-    if date < datetime.now(pytz.utc):
+def validate_date(date: datetime):
+    if date < datetime.now(tz=date.tzinfo):
         raise ValueError(f'Check in date {date} is earlier than today')
     else:
         return date

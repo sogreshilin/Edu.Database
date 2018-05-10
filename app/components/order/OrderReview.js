@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import OrderCard from "./OrderCard";
 import { OrderStatusCodes } from "../order/order";
 import { Callout, Intent } from "@blueprintjs/core";
-import API from "../../api";
+import { API } from "../../api";
 
 
 const LoadingError = ({ message }) => (

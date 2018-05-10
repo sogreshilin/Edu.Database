@@ -20,6 +20,6 @@ class OrderApi {
 
 }
 
-export default API = {
-    orders: OrderApi()
-}
+export const API = {
+    orders: new OrderApi()
+};

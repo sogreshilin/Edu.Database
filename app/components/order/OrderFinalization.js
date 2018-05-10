@@ -116,7 +116,7 @@ export default class OrderFinalization extends React.Component {
                 isCompanyWorker: false,
             });
             console.log('call /api/current_user');
-            axios.get(server + '/api/current_user')
+            axios.get('/api/current_user')
                 .then(result => {
                     if (result.data.is_authenticated) {
                         this.setState({

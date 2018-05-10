@@ -61,6 +61,7 @@ class OrderStatus(enum.Enum):
     BOOKED = 1
     PAYED = 2
     ACTIVE = 3
+    CANCELED = 4
 
 
 house_category_object = db.Table('house_category_object', db.metadata,
@@ -118,6 +119,7 @@ class Order(db.Model):
     def to_json(self):
         return {
             'id': self.order_id,
+            'status_id': self.status.value,
             'status': self.status.name,
             'client': {
                 'id': self.client.client_id,

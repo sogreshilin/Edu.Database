@@ -2,8 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
-import axios from 'axios';
-
 import styles from './main.scss';
 
 import OrderFinalization from './components/order/OrderFinalization';
@@ -23,13 +21,18 @@ const NotFound = () => (
     </div>
 );
 
+const NotImplemented = () => (
+    <div>
+        <h1>Not Implemented</h1>
+    </div>
+);
 
 
 const App = () => (
     <Router>
         <div>
             <Switch>
-                <Route exact path='/orders' component={OrderFinalization} />
+                <Route exact path='/orders/finish' component={OrderFinalization} />
                 <Route path='/orders/:id' component={OrderReview} />
                 <Route exact path='/filter' component={HouseFilter} />
                 <Route exact path='/edit/add_house' component={EditHouse} />
@@ -37,6 +40,9 @@ const App = () => (
                 <Route exact path='/edit/price' component={PriceGenerator} />
                 <Route exact path='/admin/orders' component={OrdersFilter} />
                 <Route exact path='/admin/order_summary' component={OrderSummary} />
+                <Route exact path='/services' component={NotImplemented} />
+                <Route exact path='/contacts' component={NotImplemented} />
+                <Route exact path='/about' component={NotImplemented} />
                 <Route component={NotFound} />
             </Switch>
         </div>

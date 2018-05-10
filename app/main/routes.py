@@ -14,6 +14,9 @@ from app.main.validators import *
 from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus
 from app.main.email import send_book_confirmation_email
 
+@bp.context_processor
+def inject_now():
+    return dict(now=datetime.utcnow())
 
 def get_house_total_cost(house_category_id, client_category, from_date, to_date):
     condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &

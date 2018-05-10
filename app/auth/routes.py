@@ -1,3 +1,4 @@
+import datetime
 from flask import render_template, flash, redirect, url_for, request
 from werkzeug.urls import url_parse
 from flask_login import current_user, login_user, login_required, logout_user
@@ -8,6 +9,9 @@ from app.auth.forms import RegistrationForm, LoginForm, ResetPasswordRequestForm
 from app.models import Client, ClientCategory
 from app.auth.email import send_password_reset_email
 
+@bp.context_processor
+def inject_now():
+    return dict(now=datetime.utcnow())
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():

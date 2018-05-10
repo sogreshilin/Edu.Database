@@ -8,6 +8,9 @@ from app.edit import bp
 from app.main.validators import *
 from app.models import ClientCategory, HousePrice
 
+@bp.context_processor
+def inject_now():
+    return dict(now=datetime.utcnow())
 
 def date_range(from_date, to_date):
     current_date = from_date
@@ -71,4 +74,4 @@ def add_house_category():
 @bp.route('/', defaults={'path': ''})
 @bp.route('/<path:path>')
 def catch_all(path):
-    return render_template('base.html')
+    return render_template('index.html')

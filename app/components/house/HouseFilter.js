@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card } from '@blueprintjs/core';
 import { DateRangeInput } from "@blueprintjs/datetime";
-import { Select } from "@blueprintjs/select";
 
 import { Route, Redirect } from 'react-router-dom';
 
@@ -142,7 +141,7 @@ export default class HouseFilter extends React.Component {
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
-                    <Redirect push to="/orders" />
+                    <Redirect push to="/orders/finish" />
                 </Route>
                 ) : (
             this.state.showLoadError ? (

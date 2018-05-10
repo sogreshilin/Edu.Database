@@ -7,7 +7,6 @@ import { StorageKeys, getFromStorageOrThrow } from "../Storage";
 import axios from 'axios';
 
 import styles from './order.scss';
-import PhoneInput from "./PhoneInput";
 
 
 const mockSessionStorage = () => {

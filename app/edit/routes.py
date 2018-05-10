@@ -19,15 +19,12 @@ def date_range(from_date, to_date):
 def parse_date_range(str_date_range):
     from_date = dateutil.parser.parse(str_date_range[0])
     to_date = dateutil.parser.parse(str_date_range[1])
-    print("from", from_date, "to", to_date)
     return from_date, to_date
 
 
 @bp.route('/api/edit/prices', methods=['POST'])
 def generate_prices():
-    print("Generate prices called")
     content = request.json
-    print(content)
 
     for price_policy in ('weekday', 'weekend', 'holiday'):
         for str_date_range in content[price_policy]['dates']:

@@ -16,7 +16,6 @@ from app.main.email import send_book_confirmation_email
 
 
 def get_house_total_cost(house_category_id, client_category, from_date, to_date):
-    print('get_house_total_cost(', house_category_id, ',', from_date, ',', to_date, ')')
     condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
                  (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
 
@@ -25,8 +24,6 @@ def get_house_total_cost(house_category_id, client_category, from_date, to_date)
 
 @bp.route('/api/houses')
 def get_houses():
-    print("houses api called")
-
     houses = House.query.all()
     categories = HouseCategory.query.all()
 
@@ -51,13 +48,11 @@ def get_houses():
             for category in categories
         }
     }
-    print('response content:', response)
     return jsonify(response)
 
 
 @bp.route('/api/client_categories')
 def get_client_categories():
-    print("get_clients_categories api called")
     client_categories = list(ClientCategory)
     response = {
         category.value: {
@@ -66,7 +61,6 @@ def get_client_categories():
             "prices": {}
         } for category in client_categories
     }
-    print(response)
     return jsonify(response)
 
 
@@ -78,7 +72,6 @@ def get_free_houses():
         to_date = validate_date(datetime.fromtimestamp(int(content['to_date'])))
         validate_date_earlier(from_date, to_date)
     except ValueError as error:
-        print(error)
         return Response(str(error), status=400)
     occupied_house_ids = db.session.query(Order.house_id) \
         .filter(and_(Order.status != OrderStatus.CANCELED, or_(
@@ -87,7 +80,6 @@ def get_free_houses():
     free_houses = list(map(lambda elem: elem[0], db.session.query(House.house_id, House.house_category_id)
                            .filter(~House.house_id.in_(occupied_house_ids)).all()))
     house_and_category = db.session.query(House.house_id, House.house_category_id).filter(~House.house_id.in_(occupied_house_ids)).all()
-    print(house_and_category)
 
     house_prices = dict()
     for house_id, house_category_id in house_and_category:
@@ -95,7 +87,6 @@ def get_free_houses():
         for client_category in list(ClientCategory):
             prices[client_category.value] = get_house_total_cost(house_category_id, client_category, from_date, to_date)
         house_prices[house_id] = prices
-    print(house_prices)
 
     return jsonify({'houses': free_houses, 'prices': house_prices})
 
@@ -178,7 +169,6 @@ def confirm_check_out():
 @bp.route('/api/book', methods=['POST'])
 def api_book():
     content = request.json
-    print(content)
     try:
         house = validate_house_id(int(content['house_id']))
         from_date = validate_date(datetime.fromtimestamp(int(content['from_date']), tzlocal()))
@@ -192,7 +182,6 @@ def api_book():
         email = validate_email(content['email'])
         phone = validate_phone(content['phone'])
     except ValueError as error:
-        print(error)
         return Response(str(error), status=400)
 
     client = Client.query.filter_by(email=email).first()

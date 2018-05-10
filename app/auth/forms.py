@@ -12,7 +12,6 @@ class RegistrationForm(FlaskForm):
     phone_number = StringField(_l('Phone number'), validators=[DataRequired()])
     email = StringField(_l('E-mail'), validators=[DataRequired(), Email()])
     client_categories = [(str(category.value), category.name) for category in list(ClientCategory)]
-    print('client_categories = ', client_categories)
     category = SelectField(_l('Category'), choices=client_categories)
     password = PasswordField(_l('Password'), validators=[DataRequired()])
     password_repeat = PasswordField(_l('Repeat password'), validators=[DataRequired(), EqualTo('password')])

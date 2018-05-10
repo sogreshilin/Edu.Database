@@ -38,10 +38,8 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         client = Client.query.filter_by(email=form.email.data).first()
-        print(client)
         if client is None:
             flash(_('No username with such email found'))
-            print('redirecting')
             return redirect(url_for('auth.login'))
         elif not client.check_password(form.password.data):
             flash(_('Invalid password'))

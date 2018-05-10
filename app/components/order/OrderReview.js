@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 
 import OrderCard from "./OrderCard";
 import { OrderStatusCodes } from "../order/order";
 import { Callout, Intent } from "@blueprintjs/core";
+import API from "../../api";
 
 
 const LoadingError = ({ message }) => (
@@ -11,10 +11,6 @@ const LoadingError = ({ message }) => (
         <p>{ message }</p>
     </div>
 );
-
-const loadOrderInformation = (order_id) => {
-    return axios(`/api/orders/${order_id}`);
-};
 
 class OrderReview extends Component {
 
@@ -73,7 +69,7 @@ class OrderReview extends Component {
     }
 
     updateOrderInformation() {
-        loadOrderInformation(this.order_id)
+        API.orders.get(this.order_id)
             .then(({ data }) => this.setState({
                 order: data,
                 loadComplete: true
@@ -85,7 +81,7 @@ class OrderReview extends Component {
     }
 
     onCancelOrder() {
-        axios.patch(`/api/orders/${this.order_id}/cancel`)
+        API.orders.cancel(this.order_id)
             .then(response => {
                 alert("Заказ успешно отменен");
                 this.updateOrderInformation();

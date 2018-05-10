@@ -142,7 +142,7 @@ export default class HouseFilter extends React.Component {
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
-                    <Redirect push to="/order" />
+                    <Redirect push to="/orders" />
                 </Route>
                 ) : (
             this.state.showLoadError ? (

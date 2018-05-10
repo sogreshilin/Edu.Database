@@ -29,14 +29,14 @@ const App = () => (
     <Router>
         <div>
             <Switch>
-                <Route exact path='/order' component={OrderFinalization} />
-                <Route path='current_order_status/order/:id' component={OrderReview} />
-                <Route exact path='current_order_status/filter' component={HouseFilter} />
-                <Route exact path='current_order_status/edit/add_house' component={EditHouse} />
-                <Route exact path='current_order_status/edit/add_house_category' component={EditHouseCategory} />
-                <Route exact path='current_order_status/edit/price' component={PriceGenerator} />
-                <Route exact path='current_order_status/admin/orders' component={OrdersFilter} />
-                <Route exact path='current_order_status/admin/order_summary' component={OrderSummary} />
+                <Route exact path='/orders' component={OrderFinalization} />
+                <Route path='/orders/:id' component={OrderReview} />
+                <Route exact path='/filter' component={HouseFilter} />
+                <Route exact path='/edit/add_house' component={EditHouse} />
+                <Route exact path='/edit/add_house_category' component={EditHouseCategory} />
+                <Route exact path='/edit/price' component={PriceGenerator} />
+                <Route exact path='/admin/orders' component={OrdersFilter} />
+                <Route exact path='/admin/order_summary' component={OrderSummary} />
                 <Route component={NotFound} />
             </Switch>
         </div>

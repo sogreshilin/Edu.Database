@@ -1,13 +1,13 @@
 import React from 'react';
 import { Card, Button, Label, Intent, Checkbox } from '@blueprintjs/core';
-import PhoneInput from 'react-phone-input-2';
+import InputMask from 'react-input-mask';
 
 import { StorageKeys, getFromStorageOrThrow } from "../Storage";
 
 import axios from 'axios';
 
 import styles from './order.scss';
-import {server} from "../../index";
+import PhoneInput from "./PhoneInput";
 
 
 const mockSessionStorage = () => {
@@ -17,7 +17,6 @@ const mockSessionStorage = () => {
     sessionStorage.setItem("to_timestamp", 1525090600);
 };
 
-// mockSessionStorage();
 
 const emailRegExPattern = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])";
 const emailRegEx = new RegExp(emailRegExPattern);
@@ -94,6 +93,7 @@ export default class OrderFinalization extends React.Component {
         this.onMakeOrderClicked = this.onMakeOrderClicked.bind(this);
         this.onNamePartChange = this.onNamePartChange.bind(this);
         this.onEmailChange = this.onEmailChange.bind(this);
+        this.onPhoneNumberChanged = this.onPhoneNumberChanged.bind(this);
     }
 
     componentWillMount() {
@@ -212,6 +212,18 @@ export default class OrderFinalization extends React.Component {
         });
     }
 
+    onPhoneNumberChanged(event) {
+        const phone = event.target.value;
+        const key = FormKeys.Phone();
+        const value = phone.trim().replace(/\D/g, '');
+        console.log(value);
+        if (value.length === 11) {
+            this.updateField(key, value)
+        } else {
+            this.markInvalidField(key)
+        }
+    }
+
      render() {
         return (
             <div className={"orderFinalization"}>
@@ -227,7 +239,10 @@ export default class OrderFinalization extends React.Component {
                     <section className={"contactInfoSection"}>
                         <h3>Контактные данные</h3>
                         <Label text={"Номер телефона"} helperText={"*"}>
-                            <PhoneInput disableDropdown value={this.state.phone} onChange={(value) => this.setState({phone: value})}/>
+                            <InputMask className={'pt-input'}
+                                       onChange={this.onPhoneNumberChanged}
+                                       mask="+7 (999) 999-99-99"
+                                       maskChar=" " />
                         </Label>
                         <Label text={"Email"} helperText={"*"}>
                             <input type={"email"}

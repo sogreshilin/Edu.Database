@@ -54,7 +54,7 @@ def validate_email(email):
     return email
 
 
-phone_regex = re.compile(r'^((\+7)|8)\d{10}$')
+phone_regex = re.compile(r'^7\d{10}$')
 
 
 def validate_phone(phone):

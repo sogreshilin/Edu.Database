@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios/index";
 import {server} from "../../index";
-import {getFromStorageOrThrow, StorageKeys} from "../Storage";
+import { getFromStorageOrThrow } from "../Storage";
 
 const options = {
             weekday: 'long',
@@ -35,10 +35,10 @@ export default class OrderSummary extends React.Component {
                 order: order,
                 from_date_expected: new Date(order.time.check_in_expected).toLocaleDateString('ru', options),
                 to_date_expected: new Date(order.time.check_out_expected).toLocaleDateString('ru', options),
-                from_date_actual: order.time.check_in_actual != null ?
+                from_date_actual: order.time.check_in_actual !== null ?
                     new Date(order.time.check_out_actual).toLocaleDateString('ru', options) :
                     null,
-                to_date_actual: order.time.check_out_actual != null ?
+                to_date_actual: order.time.check_out_actual !== null ?
                     new Date(order.time.check_out_actual).toLocaleDateString('ru', options) :
                     null,
             });
@@ -159,7 +159,7 @@ export default class OrderSummary extends React.Component {
                             {this.state.order.client.category_id === 1 ?
                             (<div>
                                 {this.state.order.client.category_name}
-                                {this.state.order.client.category_confirmed == null ?
+                                {this.state.order.client.category_confirmed === null ?
                                     <div>
                                         <button onClick={this.confirmCompanyWorker}>{'Подтвердить'}</button>
                                         <button onClick={this.rejectCompanyWorker}>{'Отклонить'}</button>
@@ -197,7 +197,7 @@ export default class OrderSummary extends React.Component {
                         <td>{'Фактическое время заселения'}</td>
                         <td>
                         {
-                            this.state.from_date_actual == null ?
+                            this.state.from_date_actual === null ?
                             <button onClick={this.confirmCheckIn}>{'Подтвердить заселение'}</button> :
                             this.state.from_date_actual
                         }
@@ -216,7 +216,7 @@ export default class OrderSummary extends React.Component {
                         <td>{'Фактическое время'}</td>
                         <td>
                         {
-                            this.state.to_date_actual == null ?
+                            this.state.to_date_actual === null ?
                             <button onClick={this.confirmCheckOut}>{'Подтвердить выселение'}</button> :
                             this.state.to_date_actual
                         }</td>

@@ -21,16 +21,13 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">{{ _("Recreation centers") }}</a>
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">{{ _("Синегорье") }}</a>
             </div>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
-                    <li><a href="{{ url_for('main.index') }}">{{ _("Главная") }}</a></li>
-                    {% if current_user.is_authenticated %}
                     <li><a href="{{ '/filter' }}">{{ _("Забронировать дом") }}</a></li>
                     <li><a href="{{ '/services' }}">{{ _("Услуги") }}</a></li>
-                    <li><a href="{{ '/about' }}">{{ _("Компания") }}</a></li>
-                    {% endif %}
+                    <li><a href="{{ '/about' }}">{{ _("О Компании") }}</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_anonymous %}
@@ -71,7 +68,7 @@
                 <div class="left-column">
                     <ul class="footer-list">
                         <li class="footer-item"><a href="/">Главная</a></li>
-                        <li class="footer-item"><a href="/filter">Забронировать</a></li>
+                        <li class="footer-item"><a href="/filter">Забронировать дом</a></li>
                         <li class="footer-item"><a href="/services">Услуги</a></li>
                         <li class="footer-item"><a href="/contacts">Контакты</a></li>
                         <li class="footer-item"><a href="/about">О Компании</a></li>

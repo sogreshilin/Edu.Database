@@ -6,6 +6,7 @@
 
 
 $footerHeight: 50px;
+$mainGreen: #4CAF50;
 
 body {
   font-family: 'Roboto', Arial, sans-serif;
@@ -25,9 +26,33 @@ html, body {
   height: $footerHeight;
 }
 
+.navbar {
+  background: #ffffff;
+  border-radius: 0;
+  border-bottom: 1px solid $mainGreen;
+  color: #999;
+  font-weight: lighter;
+
+  ul.navbar-nav > li > a:hover {
+    color: $mainGreen !important;
+  }
+
+  //.navbar-brand {
+  //  background: $mainGreen;
+  //  color: #fff;
+  //}
+
+}
+
+
+$footerColor: #031C11;
+$footerTextColor: #bbb;
+
 footer {
-  background: #f0f0f0;
-  color: rgba(0,0,0,.45);
+  background: $footerColor;
+  color: $footerTextColor;
+  //background: #f0f0f0;
+  //color: rgba(0,0,0,.45);
 
   .container {
     height: 100%;
@@ -37,7 +62,6 @@ footer {
     width: 100%;
     height: 100%;
     line-height: 100%;
-    //padding: 10px 0;
     display: table;
 
     .left-column {
@@ -66,13 +90,12 @@ footer {
   }
 
   a {
-    color: rgba(0,0,0,.45);
+    color: $footerTextColor;
     text-decoration: none;
   }
 
   a:hover {
-    color: #333;
-    //color: #3C71FF;
+    color: #fff;
     text-decoration: none;
   }
 

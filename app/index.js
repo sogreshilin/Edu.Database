@@ -12,6 +12,7 @@ import PriceGenerator from "./components/edit/PriceGenerator";
 import OrdersFilter from "./components/administrator/OrdersFilter";
 import OrderSummary from "./components/administrator/OrderSummary";
 import OrderReview from "./components/order/OrderReview";
+import Landing from "./components/landing/Landing";
 
 export const server = 'http://localhost:5000';
 
@@ -27,25 +28,35 @@ const NotImplemented = () => (
     </div>
 );
 
+const WrappedComponents = () => (
+    <div className={'container'}>
+    <Switch>
+        <Route exact path='/orders/finish' component={OrderFinalization} />
+        <Route path='/orders/:id' component={OrderReview} />
+        <Route exact path='/filter' component={HouseFilter} />
+        <Route exact path='/edit/add_house' component={EditHouse} />
+        <Route exact path='/edit/add_house_category' component={EditHouseCategory} />
+        <Route exact path='/edit/price' component={PriceGenerator} />
+        <Route exact path='/admin/orders' component={OrdersFilter} />
+        <Route exact path='/admin/order_summary' component={OrderSummary} />
+        <Route exact path='/services' component={NotImplemented} />
+        <Route exact path='/contacts' component={NotImplemented} />
+        <Route exact path='/about' component={NotImplemented} />
+        <Route component={NotFound} />
+    </Switch>
+    </div>
+);
+
+
+
+
 
 const App = () => (
     <Router>
-        <div>
-            <Switch>
-                <Route exact path='/orders/finish' component={OrderFinalization} />
-                <Route path='/orders/:id' component={OrderReview} />
-                <Route exact path='/filter' component={HouseFilter} />
-                <Route exact path='/edit/add_house' component={EditHouse} />
-                <Route exact path='/edit/add_house_category' component={EditHouseCategory} />
-                <Route exact path='/edit/price' component={PriceGenerator} />
-                <Route exact path='/admin/orders' component={OrdersFilter} />
-                <Route exact path='/admin/order_summary' component={OrderSummary} />
-                <Route exact path='/services' component={NotImplemented} />
-                <Route exact path='/contacts' component={NotImplemented} />
-                <Route exact path='/about' component={NotImplemented} />
-                <Route component={NotFound} />
-            </Switch>
-        </div>
+        <Switch>
+            <Route exact path='/' component={Landing} />
+            <Route component={WrappedComponents} />
+        </Switch>
     </Router>
 );
 

@@ -1,12 +1,16 @@
+import uuid
 from datetime import timedelta
 
 import dateutil.parser
-from flask import request, Response, render_template
+import os
+from flask import request, Response, render_template, jsonify
 
 from app import db
 from app.edit import bp
 from app.main.validators import *
 from app.models import ClientCategory, HousePrice
+from config import IMAGE_DIR
+
 
 @bp.context_processor
 def inject_now():
@@ -43,7 +47,24 @@ def generate_prices():
     return Response()
 
 
-@bp.route('/api/edit/add_house', methods=['POST'])
+@bp.route('/api/upload/house_image', methods=['POST'])
+def upload_house_image():
+    mime_type = request.headers['Content-Type']
+    if mime_type.startswith('image/'):
+        file_type = mime_type[6:]
+        file_name = str(uuid.uuid4())
+
+        if not os.path.exists(IMAGE_DIR):
+            os.makedirs(IMAGE_DIR)
+
+        with open(IMAGE_DIR + file_name + '.' + file_type, 'wb') as file:
+            file.write(request.data)
+
+        return jsonify({'filename': file_name + '.' + file_type})
+    return Response(f'Image file expected, found: {mime_type}', status=400)
+
+
+@bp.route('/api/edit/house', methods=['POST'])
 def add_house():
     content = request.json
     try:
@@ -52,9 +73,18 @@ def add_house():
     except (ValueError, KeyError) as error:
         return Response(str(error), status=400)
     description = content.get('description', '')
-    image_url = content.get('image_url', '')
-    db.session.add(House(name=name, house_category=category, description=description, image_url=image_url))
-    db.session.commit()
+    image_filename = content.get('image_filename', '')
+    print('image_filename:', image_filename)
+    try:
+        house = validate_house_id(content['house_id'])
+        house.name = name
+        house.house_category = category
+        house.description = description
+        house.image_url = image_filename
+        db.session.commit()
+    except ValueError as error:
+        db.session.add(House(name=name, house_category=category, description=description))
+        db.session.commit()
     return Response()
 
 

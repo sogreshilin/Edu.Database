@@ -1,3 +1,5 @@
+import os
+import uuid
 from datetime import date, datetime
 
 from dateutil.tz import tzlocal
@@ -13,6 +15,8 @@ from flask_login import login_required, current_user
 from app.main.validators import *
 from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus
 from app.main.email import send_book_confirmation_email
+from config import IMAGE_DIR
+
 
 @bp.context_processor
 def inject_now():

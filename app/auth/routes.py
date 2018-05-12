@@ -11,7 +11,8 @@ from app.auth.email import send_password_reset_email
 
 @bp.context_processor
 def inject_now():
-    return dict(now=datetime.utcnow())
+    return dict(now=datetime.datetime.utcnow())
+
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():

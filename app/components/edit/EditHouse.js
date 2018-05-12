@@ -6,8 +6,11 @@ import { Card, Button, Label, Intent, Checkbox } from '@blueprintjs/core';
 
 import styles from './edit.scss';
 
-/*
-const EditorPopup = ({
+
+class EditorPopup extends React.Component {
+
+
+render() { const  {
     triggerButtonText,
     title,
     name,
@@ -20,7 +23,7 @@ const EditorPopup = ({
     onFileChanged,
     confirmButtonText,
     onConfirm
-}) => {
+} = this.props;
     return (
         <Popup trigger={<button>{triggerButtonText}</button>} modal>
             <div>
@@ -50,7 +53,7 @@ const EditorPopup = ({
                         <textarea
                             defaultValue={description}
                             className={'pt-input'}
-                            onChange={onCategoryChanged}>
+                            onChange={onDescriptionChanged}>
                         </textarea>
                     </Label>
 
@@ -61,7 +64,6 @@ const EditorPopup = ({
                             type="file"
                             onChange={onFileChanged}
                             accept=".gif,.jpg,.jpeg,.png,.pjpeg"
-                            ref={'ChooseImageRef'}
                         />
                     </Label>
 
@@ -73,8 +75,8 @@ const EditorPopup = ({
         </Popup>
     );
 };
-*/
 
+}
 
 export default class EditHouse extends React.Component {
     constructor() {
@@ -198,69 +200,26 @@ export default class EditHouse extends React.Component {
             <div className={'edit-house'}>
                 <h1>{'Редактирование домов'}</h1>
 
-                {/*<EditorPopup*/}
-                    {/*triggerButtonText={"Добавить новый"}*/}
-                    {/*title={"Добавление нового дома"}*/}
-                    {/*name={this.state.name}*/}
-                    {/*category_id={this.state.category_id}*/}
-                    {/*categories={this.state.categories}*/}
-                    {/*description={this.state.description}*/}
-                    {/*onNameChanged={this.handleNameChanged}*/}
-                    {/*onCategoryChanged={this.handleCategoryChanged}*/}
-                    {/*onDescriptionChanged={this.handleDescriptionChanged}*/}
-                    {/*onFileChanged={this.handleFileChanged}*/}
-                    {/*confirmButtonText={"Добавить"}*/}
-                    {/*onConfirm={this.handleAddClicked}*/}
-                {/*/>*/}
-
-                <Popup trigger={<button>Добавить дом</button>} modal>
-                    <div>
-                        <div className={'edit-house'}>
-                            <h3>{'Добавление нового дома'}</h3>
-                            <Label text={"Название"} helperText={"*"}>
-                                <input
-                                    required
-                                    className={'pt-input'}
-                                    type='text'
-                                    onChange={this.handleNameChanged} />
-                            </Label>
-                            <Label text={"Категория дома"} helperText={"*"}>
-                                <select
-                                    className={'pt-input'}
-                                    onChange={this.handleCategoryChanged}>
-                                    <option key={-1} value={-1}>-- Not Selected --</option>
-                                    { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
-                                </select>
-                            </Label>
-                            <Label text={"Описание"}>
-                                <textarea
-                                    className={'pt-input'}
-                                    onChange={this.handleDescriptionChanged}>
-                                </textarea>
-                            </Label>
-                            <Label text={"Изображение"} helperText={"*"}>
-                                <input
-                                    required
-                                    id={'pt-input'}
-                                    type="file"
-                                    onChange={this.handleFileChanged}
-                                    accept=".gif,.jpg,.jpeg,.png,.pjpeg"
-                                    ref={'ChooseImageRef'}
-                                />
-                            </Label>
-
-                            <div>
-                                <button onClick={this.handleAddClicked}>{'Добавить'}</button>
-                            </div>
-                        </div>
-                    </div>
-                </Popup>
+                <EditorPopup
+                    triggerButtonText={"Добавить новый"}
+                    title={"Добавление нового дома"}
+                    name={this.state.name}
+                    category_id={this.state.category_id}
+                    categories={this.state.categories}
+                    description={this.state.description}
+                    onNameChanged={this.handleNameChanged}
+                    onCategoryChanged={this.handleCategoryChanged}
+                    onDescriptionChanged={this.handleDescriptionChanged}
+                    onFileChanged={this.handleFileChanged}
+                    confirmButtonText={"Добавить"}
+                    onConfirm={this.handleAddClicked}
+                />
 
                 <h3>{'Следующие дома есть в базе данных'}</h3>
                 <div>
                     {
                         Object.values(this.state.houses).map(house =>
-                                <div id={house.id}>
+                                <div id={house.id} key={house.id}>
                                     <p>{house.name}</p>
                                     <button>Удалить</button>
                                     <button>Изменить</button>

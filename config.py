@@ -5,6 +5,7 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 # load_dotenv(os.path.join(basedir, '.env'))
 
+IMAGE_DIR = './resources/image/'
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
@@ -12,6 +13,7 @@ class Config(object):
         'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     LANGUAGES = ['en', 'ru']
+
 
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)

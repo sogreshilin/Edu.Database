@@ -1,36 +1,102 @@
 import React from "react";
 import axios from "axios/index";
 import {server} from '../../index'
+import Popup from "reactjs-popup";
+import { Card, Button, Label, Intent, Checkbox } from '@blueprintjs/core';
 
-// todo: add image_url here
+import styles from './edit.scss';
 
-
-const HouseEditor = ({house, onUpdate}) => {
+/*
+const EditorPopup = ({
+    triggerButtonText,
+    title,
+    name,
+    category_id,
+    categories,
+    description,
+    onNameChanged,
+    onCategoryChanged,
+    onDescriptionChanged,
+    onFileChanged,
+    confirmButtonText,
+    onConfirm
+}) => {
     return (
-        <div>
-            <p>{house.id}</p>
-            <p>{house.name}</p>
-            <button onClick={() => onUpdate(house)}>{'Обновить'}</button>
-        </div>
-    )
+        <Popup trigger={<button>{triggerButtonText}</button>} modal>
+            <div>
+                <div className={'edit-house'}>
+                    <h3>{title}</h3>
+                    <Label text={"Название"} helperText={"*"}>
+                        <input
+                            required
+                            value={name}
+                            className={'pt-input'}
+                            type='text'
+                            onChange={onNameChanged} />
+                    </Label>
+
+                    <Label text={"Категория дома"} helperText={"*"}>
+                        <select
+                            className={'pt-input'}
+                            onChange={onCategoryChanged}
+                            defaultValue={category_id}
+                        >
+                            <option key={-1} value={-1}>-- Not Selected --</option>
+                            { Object.values(categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
+                        </select>
+                    </Label>
+
+                    <Label text={"Описание"}>
+                        <textarea
+                            defaultValue={description}
+                            className={'pt-input'}
+                            onChange={onCategoryChanged}>
+                        </textarea>
+                    </Label>
+
+                    <Label text={"Изображение"} helperText={"*"}>
+                        <input
+                            required
+                            id={'pt-input'}
+                            type="file"
+                            onChange={onFileChanged}
+                            accept=".gif,.jpg,.jpeg,.png,.pjpeg"
+                            ref={'ChooseImageRef'}
+                        />
+                    </Label>
+
+                    <div>
+                        <button onClick={onConfirm}>{confirmButtonText}</button>
+                    </div>
+                </div>
+            </div>
+        </Popup>
+    );
 };
+*/
 
 
 export default class EditHouse extends React.Component {
     constructor() {
         super();
         this.state = {
+            house_id: -1,
             name: '',
-            categoryId: -1,
+            category_id: -1,
             description: '',
-            imageUrl: '',
+            file: null,
+
             categories: {},
-            houses: {}
+            houses: {},
+            image_filename: null,
         };
         this.handleNameChanged = this.handleNameChanged.bind(this);
         this.handleCategoryChanged = this.handleCategoryChanged.bind(this);
         this.handleDescriptionChanged = this.handleDescriptionChanged.bind(this);
-        this.handleSaveClicked = this.handleSaveClicked.bind(this);
+        this.addHouseRecord = this.addHouseRecord.bind(this);
+        this.handleFileChanged = this.handleFileChanged.bind(this);
+        this.uploadImage = this.uploadImage.bind(this);
+        this.handleAddClicked = this.handleAddClicked.bind(this);
     }
 
     componentDidMount() {
@@ -45,57 +111,6 @@ export default class EditHouse extends React.Component {
             })
     }
 
-    render() {
-        return (
-            <div className={'edit-house'}>
-                <h1>{'Редактирование домов'}</h1>
-                <h2>{'Добавление нового дома'}</h2>
-                <div>
-                    <input
-                        className={'input-field'}
-                        type='text'
-                        placeholder={'Название'}
-                        onChange={this.handleNameChanged} />
-                </div>
-                <div>
-                    <select
-                        className={'select-field'}
-                        onChange={this.handleCategoryChanged}>
-                        <option key={-1} value={-1}>-- Not Selected --</option>
-                        { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
-                    </select>
-                </div>
-                <div>
-                    <textarea
-                        className={'description-field'}
-                        placeholder={'Описание'}
-                        onChange={this.handleDescriptionChanged}>
-                    </textarea>
-                </div>
-                <div>
-                    <button onClick={this.handleSaveClicked}>{'Сохранить'}</button>
-                </div>
-
-                <h2>{'Редактирование существующих'}</h2>
-                {
-                    Object.values(this.state.houses).map(house => <HouseEditor house={house} onUpdate={this.handleUpdateHouse}/>)
-                }
-            </div>
-        )
-    }
-
-    handleUpdateHouse(house) {
-        axios.post(server + '/api/edit/update_house', {
-                house: house
-            })
-            .then(() => alert('Информация о доме обновлена'))
-            .catch(error => {
-                console.log(error.message);
-                console.log(error.response.status);
-                console.log(error.response.data);
-            })
-    }
-
     handleNameChanged(event) {
         const name = event.target.value;
         this.setState({
@@ -105,9 +120,8 @@ export default class EditHouse extends React.Component {
 
     handleCategoryChanged(event) {
         const categoryId = Number.parseInt(event.target.value);
-        console.log('categoryId = ' + categoryId);
         this.setState({
-            categoryId: categoryId
+            category_id: categoryId
         })
     }
 
@@ -119,18 +133,143 @@ export default class EditHouse extends React.Component {
 
     }
 
-    handleSaveClicked() {
-        axios.post("http://localhost:5000/api/edit/add_house", {
-                name: this.state.name,
-                category_id: this.state.categoryId,
-                description: this.state.description,
-                image_url: this.state.imageUrl
+    handleFileChanged(event) {
+        const file = event.target.files[0];
+        this.setState({
+            file: file
+        })
+    };
+
+    handleAddClicked() {
+        this.uploadImage();
+    }
+
+    uploadImage() {
+        const file = this.state.file;
+        if (file) {
+            axios.post(server + '/api/upload/house_image', this.state.file, {
+                headers: { 'Content-Type': this.state.file.type }
             })
-            .then(() => alert('Дом успешно сохранен в базу данных'))
+        .then(response => {
+            this.setState({
+                image_filename: response.data.image_filename
+            }, this.addHouseRecord);
+        })
+        .catch(error => {
+                alert(error.message);
+                console.log(error.response.status);
+                console.log(error.message);
+                console.log(error.response.data);
+            });
+        }
+    }
+
+     addHouseRecord() {
+        axios.post(server + "/api/edit/house", {
+                name: this.state.name,
+                house_id: this.state.house_id,
+                category_id: this.state.category_id,
+                description: this.state.description,
+                image_filename: this.state.image_filename,
+            })
+            .then(() => {
+                alert('Дом успешно сохранен в базу данных');
+                axios
+                    .get(server + '/api/houses')
+                    .then(result => this.setState({
+                        categories: result.data.categories,
+                        houses: result.data.houses
+                    }))
+                    .catch(error => {
+                        console.error(error)
+                    })
+            })
             .catch(error => {
+                alert(error.response.data);
                 console.log(error.message);
                 console.log(error.response.status);
                 console.log(error.response.data);
-            })
+            });
+
     }
+
+    render() {
+        return (
+            <div className={'edit-house'}>
+                <h1>{'Редактирование домов'}</h1>
+
+                {/*<EditorPopup*/}
+                    {/*triggerButtonText={"Добавить новый"}*/}
+                    {/*title={"Добавление нового дома"}*/}
+                    {/*name={this.state.name}*/}
+                    {/*category_id={this.state.category_id}*/}
+                    {/*categories={this.state.categories}*/}
+                    {/*description={this.state.description}*/}
+                    {/*onNameChanged={this.handleNameChanged}*/}
+                    {/*onCategoryChanged={this.handleCategoryChanged}*/}
+                    {/*onDescriptionChanged={this.handleDescriptionChanged}*/}
+                    {/*onFileChanged={this.handleFileChanged}*/}
+                    {/*confirmButtonText={"Добавить"}*/}
+                    {/*onConfirm={this.handleAddClicked}*/}
+                {/*/>*/}
+
+                <Popup trigger={<button>Добавить дом</button>} modal>
+                    <div>
+                        <div className={'edit-house'}>
+                            <h3>{'Добавление нового дома'}</h3>
+                            <Label text={"Название"} helperText={"*"}>
+                                <input
+                                    required
+                                    className={'pt-input'}
+                                    type='text'
+                                    onChange={this.handleNameChanged} />
+                            </Label>
+                            <Label text={"Категория дома"} helperText={"*"}>
+                                <select
+                                    className={'pt-input'}
+                                    onChange={this.handleCategoryChanged}>
+                                    <option key={-1} value={-1}>-- Not Selected --</option>
+                                    { Object.values(this.state.categories).map(category => <option key={category.id} value={category.id}>{category.name}</option>) }
+                                </select>
+                            </Label>
+                            <Label text={"Описание"}>
+                                <textarea
+                                    className={'pt-input'}
+                                    onChange={this.handleDescriptionChanged}>
+                                </textarea>
+                            </Label>
+                            <Label text={"Изображение"} helperText={"*"}>
+                                <input
+                                    required
+                                    id={'pt-input'}
+                                    type="file"
+                                    onChange={this.handleFileChanged}
+                                    accept=".gif,.jpg,.jpeg,.png,.pjpeg"
+                                    ref={'ChooseImageRef'}
+                                />
+                            </Label>
+
+                            <div>
+                                <button onClick={this.handleAddClicked}>{'Добавить'}</button>
+                            </div>
+                        </div>
+                    </div>
+                </Popup>
+
+                <h3>{'Следующие дома есть в базе данных'}</h3>
+                <div>
+                    {
+                        Object.values(this.state.houses).map(house =>
+                                <div id={house.id}>
+                                    <p>{house.name}</p>
+                                    <button>Удалить</button>
+                                    <button>Изменить</button>
+                                </div>
+                            )
+                    }
+                </div>
+            </div>
+        )
+    }
+
 }

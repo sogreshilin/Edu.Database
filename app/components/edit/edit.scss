@@ -1,0 +1,20 @@
+.extraServicesItem {
+  padding: 10px 0;
+  border-bottom: 1px dashed #dfdfdf;
+}
+
+.extraServicesItem:last-of-type {
+  border-bottom: none;
+}
+
+.inline {
+  display: inline-block;
+}
+
+.sidePadding {
+  margin: 0 0 0 1rem;
+}
+
+.selected {
+  background: aqua;
+}

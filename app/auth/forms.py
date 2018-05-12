@@ -20,7 +20,7 @@ class RegistrationForm(FlaskForm):
     def validate_email(self, email):
         client = Client.query.filter_by(email=email.data).first()
         if client is not None:
-            raise ValidationError(_('User with e-mail: %(email) already exists', email=email.data))
+            raise ValidationError(_(f'User with e-mail {email.data} already exists'))
 
 
 class LoginForm(FlaskForm):

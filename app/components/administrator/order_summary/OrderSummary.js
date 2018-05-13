@@ -13,6 +13,22 @@ import classNames from "classnames";
 
 const classes = classNames(Classes.CARD, Classes.ELEVATION_4, "docs-overlay-example-transition");
 
+const date_time_options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        };
+
+const date_options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        };
+
 
 export default class OrderSummary extends React.Component {
     constructor() {

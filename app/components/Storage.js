@@ -4,8 +4,8 @@ export class StorageKeys {
     static CategoryName() { return "category_name"; }
     static HouseId() { return "house_id"; }
     static HouseName() { return "house_name"; }
-    static FromTimestamp() { return "from_timestamp"; }
-    static ToTimestamp() { return "to_timestamp"; }
+    static FromDate() { return "from_date"; }
+    static ToDate() { return "to_date"; }
     static Prices() { return "prices"; }
 
 }

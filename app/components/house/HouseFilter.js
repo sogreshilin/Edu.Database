@@ -11,7 +11,6 @@ import axios from "axios";
 
 const host = "http://localhost:5000";
 
-const dateToTimestamp = (date) => parseInt((date.getTime() / 1000).toFixed(0));
 
 const HouseCard = ({ houseId, price, categoryName, title, imageUrl, description, onSelect }) => (
     <div className={"house-card"}>
@@ -89,8 +88,8 @@ export default class HouseFilter extends React.Component {
         // this.freeHousesRequestCancelToken.cancel();
 
         axios.post(`${host}/api/free_houses`, {
-            from_date: dateToTimestamp(rangeStart),
-            to_date: dateToTimestamp(rangeEnd)
+            from_date: rangeStart.toISOString(),
+            to_date: rangeEnd.toISOString()
         })
             .then(({ data }) => {
                 console.log(data);
@@ -127,8 +126,8 @@ export default class HouseFilter extends React.Component {
         SessionStorage.put(StorageKeys.HouseName(), house.name);
         SessionStorage.put(StorageKeys.CategoryId(), house.category);
         SessionStorage.put(StorageKeys.CategoryName(), this.state.categories[house.category].name);
-        SessionStorage.put(StorageKeys.FromTimestamp(), dateToTimestamp(this.state.dateRange[0]));
-        SessionStorage.put(StorageKeys.ToTimestamp(), dateToTimestamp(this.state.dateRange[1]));
+        SessionStorage.put(StorageKeys.FromDate(), this.state.dateRange[0].toISOString());
+        SessionStorage.put(StorageKeys.ToDate(), this.state.dateRange[1].toISOString());
         SessionStorage.put(StorageKeys.Prices(), JSON.stringify(this.state.prices[houseId]));
 
 

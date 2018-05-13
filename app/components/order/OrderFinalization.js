@@ -12,8 +12,8 @@ import styles from './order.scss';
 const mockSessionStorage = () => {
     sessionStorage.setItem("category_id", 12);
     sessionStorage.setItem("house_id", 1);
-    sessionStorage.setItem("from_timestamp", 1525000000);
-    sessionStorage.setItem("to_timestamp", 1525090600);
+    sessionStorage.setItem("from_date", 1525000000);
+    sessionStorage.setItem("to_date", 1525090600);
 };
 
 
@@ -76,8 +76,8 @@ export default class OrderFinalization extends React.Component {
         this.state = {
             category_id:  0,
             house_id: 0,
-            from_timestamp: 0,
-            to_timestamp: 0,
+            from_date: 0,
+            to_date: 0,
             email: "",
             first_name: "",
             second_name: "",
@@ -104,8 +104,8 @@ export default class OrderFinalization extends React.Component {
                 categoryName:  getFromStorageOrThrow(StorageKeys.CategoryName()),
                 house_id: toInt(getFromStorageOrThrow(StorageKeys.HouseId())),
                 house_name: getFromStorageOrThrow(StorageKeys.HouseName()),
-                from_timestamp: toInt(getFromStorageOrThrow(StorageKeys.FromTimestamp())),
-                to_timestamp: toInt(getFromStorageOrThrow(StorageKeys.ToTimestamp())),
+                from_date: new Date(getFromStorageOrThrow(StorageKeys.FromDate())),
+                to_date: new Date(getFromStorageOrThrow(StorageKeys.ToDate())),
                 prices: JSON.parse(getFromStorageOrThrow(StorageKeys.Prices())),
                 email: "",
                 first_name: "",
@@ -154,8 +154,8 @@ export default class OrderFinalization extends React.Component {
 
         axios.post("http://localhost:5000/api/book", {
                 house_id: this.state.house_id,
-                from_date: this.state.from_timestamp,
-                to_date: this.state.to_timestamp,
+                from_date: this.state.from_date.toISOString(),
+                to_date: this.state.to_date.toISOString(),
                 email: this.state.email,
                 phone: serializePhoneNumber(this.state.phone),
                 first_name: this.state.first_name,
@@ -229,8 +229,8 @@ export default class OrderFinalization extends React.Component {
                 <Card>
                     <GeneralOrderInformation houseCategory={this.state.category_id}
                                              houseNumber={this.state.house_id}
-                                             dateFrom={new Date(this.state.from_timestamp * 1000)}
-                                             dateTo={new Date(this.state.to_timestamp * 1000)}
+                                             dateFrom={this.state.from_date}
+                                             dateTo={this.state.to_date}
                                              price={this.state.prices[this.state.isCompanyWorker ? "1" : "2"]}
                     />
                 </Card>

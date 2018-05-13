@@ -247,15 +247,15 @@ export default class PriceGenerator extends React.Component {
     handleSavePrices() {
         axios.post(server + "/api/edit/prices", {
             holiday: {
-                dates: this.state.holidaysDates,
+                dates: this.state.holidaysDates.map(range => [range[0].toISOString(), range[1].toISOString()]),
                 prices: this.state.holidayClientCategoryHouseCategoryPrice
             },
             weekend: {
-                dates: this.state.weekendsDates,
+                dates: this.state.weekendsDates.map(range => [range[0].toISOString(), range[1].toISOString()]),
                 prices: this.state.weekendClientCategoryHouseCategoryPrice
             },
             weekday: {
-                dates: this.state.weekdaysDates,
+                dates: this.state.weekdaysDates.map(range => [range[0].toISOString(), range[1].toISOString()]),
                 prices: this.state.weekdayClientCategoryHouseCategoryPrice
             }
         })

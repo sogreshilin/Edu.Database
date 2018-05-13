@@ -1,7 +1,6 @@
 import React from "react";
 import { Classes, Intent, Alert, Tab, Tabs, Overlay } from "@blueprintjs/core";
 import {getFromStorageOrThrow, SessionStorage} from "../../Storage";
-import {date_options, date_time_options} from "../OrderSummary";
 import axios from "axios/index";
 import {server} from "../../../index";
 import { Order } from "./Order"

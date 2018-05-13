@@ -1,6 +1,6 @@
 import React  from 'react';
 
-import { options as dateOptions } from "../administrator/OrderSummary";
+import { date_time_options as dateOptions } from "../administrator/OrderSummary";
 import { OrderStatusCodes, OrderStatusText } from "./order";
 
 const toLocaleDateString = (date) => new Date(date).toLocaleDateString('ru', dateOptions);

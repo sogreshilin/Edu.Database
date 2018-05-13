@@ -6,6 +6,7 @@ import { Card } from '@blueprintjs/core';
 
 import styles from './order_filter.scss';
 import {SessionStorage} from "../Storage";
+import {OrderStatusText} from "../order/order";
 
 const OrderCard = ({ order, onClick }) => {
     const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
@@ -23,7 +24,7 @@ const OrderCard = ({ order, onClick }) => {
             <tbody>
                 <tr>
                     <td>{'Статус'}</td>
-                    <td>{order.status}</td>
+                    <td>{OrderStatusText[order.status_id]}</td>
                 </tr>
                 <tr>
                     <td>{'Категория дома'}</td>
@@ -93,18 +94,18 @@ export default class OrdersFilter extends React.Component {
             ) : (
                 <div>
                     {
-                        Object.values(this.state.orders)
-                            .map(order =>
-                                <div key={order.id}>
-                                    <Card>
-                                        <OrderCard
-                                            order={order}
-                                            onClick={this.onOrderChosen}
-                                        />
-                                    </Card>
-                                    <p/>
-                                </div>
-                            )
+                            Object.values(this.state.orders)
+                                .map(order =>
+                                    <div key={order.id}>
+                                        <Card>
+                                            <OrderCard
+                                                order={order}
+                                                onClick={this.onOrderChosen}
+                                            />
+                                        </Card>
+                                        <p/>
+                                    </div>
+                                )
                     }
                 </div>
             )

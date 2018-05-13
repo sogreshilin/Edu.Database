@@ -5,7 +5,7 @@ from _datetime import datetime
 import pytz
 from dateutil.tz import tzlocal
 
-from app.models import HouseCategory, House, ClientCategory, Client, Order
+from app.models import HouseCategory, House, ClientCategory, Client, Order, Service
 from validate_email import validate_email as is_email_valid
 
 
@@ -28,6 +28,14 @@ def validate_house_id(id):
         raise ValueError(f'House with specified id={id} does not exist')
     else:
         return house
+
+
+def validate_service_id(id):
+    service = Service.query.filter_by(service_id=id).first()
+    if service is None:
+        raise ValueError(f'Service with specified id={id} does not exist')
+    else:
+        return service
 
 
 def validate_date(date: datetime):

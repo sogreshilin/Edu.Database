@@ -10,8 +10,10 @@ import EditHouse from "./components/edit/EditHouse";
 import EditHouseCategory from "./components/edit/EditHouseCategory";
 import PriceGenerator from "./components/edit/PriceGenerator";
 import OrdersFilter from "./components/administrator/OrdersFilter";
-import OrderSummary from "./components/administrator/OrderSummary";
+import OrderSummary from "./components/administrator/order_summary/OrderSummary";
 import OrderReview from "./components/order/OrderReview";
+import EditService from "./components/edit/EditService";
+import ServiceShop from "./components/administrator/ServiceShop";
 
 export const server = 'http://localhost:5000';
 
@@ -37,9 +39,11 @@ const App = () => (
                 <Route exact path='/filter' component={HouseFilter} />
                 <Route exact path='/edit/add_house' component={EditHouse} />
                 <Route exact path='/edit/add_house_category' component={EditHouseCategory} />
+                <Route exact path='/edit/service' component={EditService} />
                 <Route exact path='/edit/price' component={PriceGenerator} />
                 <Route exact path='/admin/orders' component={OrdersFilter} />
                 <Route exact path='/admin/order_summary' component={OrderSummary} />
+                <Route exact path='/admin/service_shop' component={ServiceShop} />
                 <Route exact path='/services' component={NotImplemented} />
                 <Route exact path='/contacts' component={NotImplemented} />
                 <Route exact path='/about' component={NotImplemented} />

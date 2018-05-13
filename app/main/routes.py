@@ -1,21 +1,19 @@
-import os
-import uuid
 from datetime import date, datetime
 
-from dateutil.tz import tzlocal
+import dateutil
 from sqlalchemy import and_, func, or_
+from sqlalchemy.orm import load_only
 
 from app import db
 from app.main import bp
-from app.main.forms import OrderForm
-from flask import render_template, flash, redirect, url_for, jsonify, request, Response
+from flask import render_template, jsonify, request, Response
 from flask_babel import _
 from flask_login import login_required, current_user
 
 from app.main.validators import *
-from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus
+from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus, Service, Price, \
+    OrderService
 from app.main.email import send_book_confirmation_email
-from config import IMAGE_DIR
 
 
 @bp.context_processor
@@ -26,7 +24,8 @@ def get_house_total_cost(house_category_id, client_category, from_date, to_date)
     condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
                  (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
 
-    return db.session.query(func.sum(HousePrice.price)).filter(condition).first()[0]
+    result = db.session.query(func.sum(Price.price)).join(HousePrice).filter(condition).scalar()
+    return result
 
 
 @bp.route('/api/houses')
@@ -75,8 +74,14 @@ def get_client_categories():
 def get_free_houses():
     content = request.json
     try:
-        from_date = validate_date(datetime.fromtimestamp(int(content['from_date'])))
-        to_date = validate_date(datetime.fromtimestamp(int(content['to_date'])))
+        from_date = validate_date(dateutil.parser
+                                  .parse(content['from_date'])
+                                  .astimezone(tzlocal())
+                                  .replace(hour=0, minute=0, second=0, microsecond=0))
+        to_date = validate_date(dateutil.parser
+                                .parse(content['to_date'])
+                                .astimezone(tzlocal())
+                                .replace(hour=0, minute=0, second=0, microsecond=0))
         validate_date_earlier(from_date, to_date)
     except ValueError as error:
         return Response(str(error), status=400)
@@ -122,6 +127,29 @@ def api_current_user():
 def get_upcoming_orders():
     orders = {order.order_id: order.to_json() for order in Order.query.all()}
     return jsonify(orders)
+
+
+@bp.route('/api/order/add_services', methods=['POST'])
+def add_services_to_order():
+    print(request.json)
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        for service in request.json['services']:
+            print(service)
+            order_service = OrderService(amount=service['amount'])
+            order_service.service_id = service['service_id']
+            order.services.append(order_service)
+            db.session.add(order_service)
+        db.session.commit()
+    except (ValueError, TypeError) as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
+
+
+@bp.route('/api/services')
+def get_services():
+    services = {service.service_id: service.to_json() for service in Service.query.all()}
+    return jsonify(services)
 
 
 @bp.route('/api/reject_company_worker', methods=['POST'])
@@ -173,13 +201,32 @@ def confirm_check_out():
     return jsonify(order.to_json())
 
 
+@bp.route('/api/confirm_amount', methods=['POST'])
+def confirm_people_count():
+    # todo: check that current_user is administrator
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        amount = int(request.json['amount'])
+        order.person_count = amount
+        db.session.commit()
+    except ValueError as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
+
+
 @bp.route('/api/book', methods=['POST'])
 def api_book():
     content = request.json
     try:
         house = validate_house_id(int(content['house_id']))
-        from_date = validate_date(datetime.fromtimestamp(int(content['from_date']), tzlocal()))
-        to_date = validate_date(datetime.fromtimestamp(int(content['to_date']), tzlocal()))
+        from_date = validate_date(dateutil.parser
+                                  .parse(content['from_date'])
+                                  .astimezone(tzlocal())
+                                  .replace(hour=0, minute=0, second=0, microsecond=0))
+        to_date = validate_date(dateutil.parser
+                                .parse(content['to_date'])
+                                .astimezone(tzlocal())
+                                .replace(hour=0, minute=0, second=0, microsecond=0))
         validate_date_earlier(from_date, to_date)
         client_category = ClientCategory.COMPANY_WORKER \
             if content['is_company_worker'] else ClientCategory.NON_COMPANY_WORKER
@@ -202,7 +249,8 @@ def api_book():
         db.session.add(client)
         db.session.commit()
 
-    order = Order(client=client, house=house, check_in_time_expected=from_date, check_out_time_expected=to_date, status=OrderStatus.BOOKED)
+    order = Order(client=client, house=house, status=OrderStatus.BOOKED,
+                  check_in_time_expected=from_date, check_out_time_expected=to_date)
     db.session.add(order)
     db.session.commit()
 

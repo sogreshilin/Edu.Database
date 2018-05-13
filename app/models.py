@@ -52,9 +52,11 @@ class Client(UserMixin, db.Model):
         return Client.query.get(id)
 
     def __repr__(self):
-        return 'Client-{} client_category={}, name={} {} {}, phone={}, email={}'.format(self.client_id, self.client_category,
-                                                                            self.last_name, self.first_name, self.middle_name,
-                                                                            self.phone_number, self.email)
+        return 'Client-{} client_category={}, name={} {} {}, phone={}, email={}'.format(self.client_id,
+                                                                                        self.client_category,
+                                                                                        self.last_name, self.first_name,
+                                                                                        self.middle_name,
+                                                                                        self.phone_number, self.email)
 
 
 class OrderStatus(enum.Enum):
@@ -62,6 +64,11 @@ class OrderStatus(enum.Enum):
     PAYED = 2
     ACTIVE = 3
     CANCELED = 4
+
+
+class Extra(enum.Enum):
+    EXTRA_HOUR = 1
+    EXTRA_PERSON = 2
 
 
 house_category_object = db.Table('house_category_object', db.metadata,
@@ -89,15 +96,15 @@ class House(db.Model):
     house_category = db.relationship('HouseCategory', backref='houses')
 
 
-class HousePrice(db.Model):
-    __tablename__ = 'house_price'
-    date = db.Column(db.DateTime, index=True, primary_key=True)
-    client_category = db.Column(db.Enum(ClientCategory), primary_key=True)
-    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'), primary_key=True)
-    price = db.Column(db.Integer, nullable=False)
-
-    def __repr__(self) -> str:
-        return f"{self.date}, {self.client_category}, {self.house_category_id}, {self.prices}"
+# class HousePrice(db.Model):
+#     __tablename__ = 'house_price'
+#     date = db.Column(db.DateTime, index=True, primary_key=True)
+#     client_category = db.Column(db.Enum(ClientCategory), primary_key=True)
+#     house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'), primary_key=True)
+#     price = db.Column(db.Integer, nullable=False)
+#
+#     def __repr__(self) -> str:
+#         return f"{self.date}, {self.client_category}, {self.house_category_id}, {self.prices}"
 
 
 class Order(db.Model):
@@ -110,17 +117,21 @@ class Order(db.Model):
     house = db.relation('House', backref='orders')
     booking_time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     checked_in = db.Column(db.Boolean, default=False)
+    person_count = db.Column(db.Integer, default=0)
 
     check_in_time_expected = db.Column(db.DateTime, index=True)
     check_out_time_expected = db.Column(db.DateTime, index=True)
     check_in_time_actual = db.Column(db.DateTime, default=None)
     check_out_time_actual = db.Column(db.DateTime, default=None)
 
+    services = db.relationship('OrderService', back_populates='order')
+
     def to_json(self):
         return {
             'id': self.order_id,
             'status_id': self.status.value,
             'status': self.status.name,
+            'person_count': self.person_count,
             'client': {
                 'id': self.client.client_id,
                 'category_id': self.client.client_category.value,
@@ -141,12 +152,19 @@ class Order(db.Model):
                 'category_name': self.house.house_category.name
             },
             'time': {
-                'booking': self.booking_time,
-                'check_in_expected': self.check_in_time_expected,
-                'check_out_expected': self.check_out_time_expected,
-                'check_in_actual': self.check_in_time_actual,
-                'check_out_actual': self.check_out_time_actual,
+                'booking': self.booking_time.isoformat(),
+                'check_in_expected': self.check_in_time_expected.isoformat(),
+                'check_out_expected': self.check_out_time_expected.isoformat(),
+                'check_in_actual': self.check_in_time_actual.isoformat() if self.check_in_time_actual else None,
+                'check_out_actual': self.check_out_time_actual.isoformat() if self.check_out_time_actual else None,
             },
+            'services': [{
+                'id': order_service.service_id,
+                'name': order_service.service.name,
+                'price': order_service.service.price,
+                'amount': order_service.amount,
+                'is_paid': False
+            } for order_service in self.services]
         }
 
     def __repr__(self) -> str:
@@ -177,38 +195,115 @@ class Service(db.Model):
     service_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), nullable=False)
     description = db.Column(db.Text)
+    orders = db.relationship("OrderService", back_populates="service")
+
+    @property
+    def price(self):
+        return db.session.query(Price.price).join(ServicePrice).filter(ServicePrice.service_id == self.service_id).scalar()
+
+    @price.setter
+    def price(self, value):
+        price = db.session.query(Price).join(ServicePrice).filter(ServicePrice.service_id == self.service_id)
+        price.price = value
+
+    def to_json(self):
+        return {
+            'id': self.service_id,
+            'name': self.name,
+            'description': self.description,
+            'price': self.price,
+        }
+
+
+class OrderService(db.Model):
+    __tablename__ = 'order_service'
+    order_service_id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'))
+    amount = db.Column(db.Integer, nullable=False)
+    order = db.relationship('Order', back_populates='services')
+    service = db.relationship('Service', back_populates='orders')
+
+
+class Price(db.Model):
+    __tablename__ = 'price'
+    price_id = db.Column(db.Integer, primary_key=True)
+    date_when_price_set = db.Column(db.DateTime, default=datetime.utcnow)
+    price = db.Column(db.Integer, nullable=False)
+
+
+class HousePrice(db.Model):
+    __tablename__ = 'house_price'
+    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+    date = db.Column(db.DateTime, index=True)
+    client_category = db.Column(db.Enum(ClientCategory))
+    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
+
+
+class SurchargePrice(db.Model):
+    __tablename__ = 'surcharge_price'
+    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+    surcharge_for = db.Column(db.Enum(Extra))
+    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
 
 
 class ServicePrice(db.Model):
     __tablename__ = 'service_price'
-    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'), primary_key=True)
-    price = db.Column(db.Integer, nullable=False)
+    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'))
 
 
-class PaymentMethod(db.Model):
-    __tablename__ = 'payment_method'
-    payment_method_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True, nullable=False)
+class PenaltyPrice(db.Model):
+    __tablename__ = 'penalty_price'
+    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+    penalty_id = db.Column(db.Integer, db.ForeignKey('penalty.penalty_id'))
 
 
-class PaymentStatus(enum.Enum):
-    PENDING = 1
-    CANCELLED = 2
-    FULFILLED = 3
-    PROCESSING_WITHDRAW = 4
-    WITHDRAW = 5
+class Penalty(db.Model):
+    __tablename__ = 'penalty'
+    penalty_id = db.Column(db.Integer, primary_key=True)
+    penalty_name = db.Column(db.String(64), nullable=False)
+    penalty_description = db.Column(db.Text)
 
 
 class Payment(db.Model):
     __tablename__ = 'payment'
     payment_id = db.Column(db.Integer, primary_key=True)
-    payment_status = db.Column(db.Enum(PaymentStatus))
-    payment_method_id = db.Column(db.Integer, db.ForeignKey('payment_method.payment_method_id'), primary_key=True)
-    payment_time = db.Column(db.DateTime, primary_key=True)
-    amount = db.Column(db.Integer)
+    date = db.Column(db.DateTime, nullable=False)
 
 
-class CashlessPaymentTransaction(db.Model):
-    __tablename__ = 'cashless_transaction'
-    transaction_id = db.Column(db.Integer, primary_key=True)
-    payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'))
+class OrderItem(db.Model):
+    __tablename__ = 'item'
+    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'), primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+    # if null => item was not payed yet
+    payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'), nullable=True)
+
+#
+# class PaymentMethod(db.Model):
+#     __tablename__ = 'payment_method'
+#     payment_method_id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(64), unique=True, nullable=False)
+#
+#
+# class PaymentStatus(enum.Enum):
+#     PENDING = 1
+#     CANCELLED = 2
+#     FULFILLED = 3
+#     PROCESSING_WITHDRAW = 4
+#     WITHDRAW = 5
+#
+#
+# class Payment(db.Model):
+#     __tablename__ = 'payment'
+#     payment_id = db.Column(db.Integer, primary_key=True)
+#     payment_status = db.Column(db.Enum(PaymentStatus))
+#     payment_method_id = db.Column(db.Integer, db.ForeignKey('payment_method.payment_method_id'), primary_key=True)
+#     payment_time = db.Column(db.DateTime, primary_key=True)
+#     amount = db.Column(db.Integer)
+#
+#
+# class CashlessPaymentTransaction(db.Model):
+#     __tablename__ = 'cashless_transaction'
+#     transaction_id = db.Column(db.Integer, primary_key=True)
+#     payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'))

@@ -7,8 +7,9 @@ from flask import request, Response, render_template, jsonify
 
 from app import db
 from app.edit import bp
+from app.main.routes import get_services
 from app.main.validators import *
-from app.models import ClientCategory, HousePrice
+from app.models import ClientCategory, HousePrice, Service, Price, ServicePrice
 from config import IMAGE_DIR
 
 
@@ -24,23 +25,33 @@ def date_range(from_date, to_date):
 
 
 def parse_date_range(str_date_range):
-    from_date = dateutil.parser.parse(str_date_range[0])
-    to_date = dateutil.parser.parse(str_date_range[1])
+    from_date = (dateutil.parser
+                              .parse(str_date_range[0])
+                              .astimezone(tzlocal())
+                              .replace(hour=0, minute=0, second=0, microsecond=0))
+    to_date = (dateutil.parser
+                            .parse(str_date_range[1])
+                            .astimezone(tzlocal())
+                            .replace(hour=0, minute=0, second=0, microsecond=0))
     return from_date, to_date
 
 
 @bp.route('/api/edit/prices', methods=['POST'])
 def generate_prices():
     content = request.json
-
     for price_policy in ('weekday', 'weekend', 'holiday'):
         for str_date_range in content[price_policy]['dates']:
             for date in date_range(*parse_date_range(str_date_range)):
                 for key, price in content[price_policy]['prices'].items():
                     client_category_id, house_category_id = (int(elem) for elem in key.split('_'))
                     client_category = ClientCategory(client_category_id).name
-                    house_price = HousePrice(date=date, client_category=client_category,
-                                             house_category_id=house_category_id, price=price)
+                    price = Price(price=price)
+                    db.session.add(price)
+                    db.session.flush()
+                    print("Price id:", price.price_id)
+                    house_price = HousePrice(price_id=price.price_id, date=date, client_category=client_category,
+                                             house_category_id=house_category_id)
+                    print("HousePrice id:", house_price.price_id)
                     db.session.merge(house_price)
                     db.session.commit()
 
@@ -99,6 +110,56 @@ def add_house_category():
     db.session.add(HouseCategory(name=name, description=description))
     db.session.commit()
     return Response()
+
+
+@bp.route('/api/edit/add_service', methods=['POST'])
+def add_service():
+    content = request.json
+    print(content)
+    try:
+        name = validate_text_non_empty(content['name'])
+        price = int(content['price'])
+    except (ValueError, KeyError) as error:
+        return Response(str(error), status=400)
+    description = content.get('description', '')
+    price = Price(price=price)
+    service = Service(name=name, description=description)
+    db.session.add(service)
+    db.session.add(price)
+    db.session.flush()
+    service_price = ServicePrice(price_id=price.price_id, service_id=service.service_id)
+    db.session.add(service_price)
+    db.session.commit()
+    return get_services()
+
+
+@bp.route('/api/edit/edit_service', methods=['POST'])
+def edit_service():
+    content = request.json
+    try:
+        service = validate_service_id(content['id'])
+        name = validate_text_non_empty(content['name'])
+        price = int(content['price'])
+    except (ValueError, KeyError) as error:
+        return Response(str(error), status=400)
+    description = content.get('description', '')
+    service.name = name
+    service.description = description
+    service.price = price
+    db.session.commit()
+    return get_services()
+
+
+@bp.route('/api/edit/delete_service', methods=['POST'])
+def delete_service():
+    content = request.json
+    try:
+        service = validate_service_id(content['id'])
+    except (ValueError, KeyError) as error:
+        return Response(str(error), status=400)
+    db.session.delete(service)
+    db.session.commit()
+    return get_services()
 
 
 @bp.route('/', defaults={'path': ''})

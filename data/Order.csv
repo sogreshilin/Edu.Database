@@ -1,0 +1,2 @@
+order_id,status,client_id,client_category_confirmed,house_id,booking_time,checked_in,person_count,check_in_time_expected,check_out_time_expected,check_in_time_actual,check_out_time_actual
+1,BOOKED,1,,5,2018-05-16 00:50:53.197110,False,0,2018-05-22 00:00:00,2018-05-25 00:00:00,,

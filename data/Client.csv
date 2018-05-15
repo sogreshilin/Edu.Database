@@ -1,0 +1,2 @@
+client_id,client_category,first_name,last_name,middle_name,phone_number,email,password_hash
+1,COMPANY_WORKER,Акакий,Безфамильных,Игнатьевич,77775055050,no-last-name@campus.org,pbkdf2:sha256:50000$SQwxa38C$5a3dc1d9f931da288bc7a8939734920a84da8a2b135afc0add60a9d8d93d51d5

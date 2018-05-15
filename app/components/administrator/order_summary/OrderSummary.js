@@ -10,6 +10,7 @@ import { Payment } from "./Payment"
 import { Time } from "./Time"
 import { ServiceShop } from "./ServiceShop"
 import classNames from "classnames";
+import {Redirect, Route} from "react-router-dom";
 
 const classes = classNames(Classes.CARD, Classes.ELEVATION_4, "docs-overlay-example-transition");
 
@@ -48,7 +49,7 @@ export default class OrderSummary extends React.Component {
             alertIsOpen: false,
             alertTooltip: '',
 
-            // for ServiceShop
+            // ServiceShop
             services: {},
             basket: [],
             current_item_id: 0,
@@ -56,6 +57,13 @@ export default class OrderSummary extends React.Component {
             current_price: 0,
             current_amount: 0,
             item_id_generator: 1,
+
+            // Payment
+            isPaymentDetailsOpen: false,
+            chosenServiceIDs: [],
+            redirectToPaymentForm: false,
+            detailed_payment_id: null,
+
         };
 
         this.handleTabChanged = this.handleTabChanged.bind(this);
@@ -78,6 +86,10 @@ export default class OrderSummary extends React.Component {
         this.handleAddItem = this.handleAddItem.bind(this);
         this.handleDeleteItem = this.handleDeleteItem.bind(this);
         this.handleSubmitFromServiceShop = this.handleSubmitFromServiceShop.bind(this);
+        this.handleShowPaymentDetails = this.handleShowPaymentDetails.bind(this);
+        this.handleHidePaymentDetails = this.handleHidePaymentDetails.bind(this);
+        this.handlePendingServiceChanged = this.handlePendingServiceChanged.bind(this);
+        this.handleProceedPayment = this.handleProceedPayment.bind(this);
     }
 
     componentDidMount() {
@@ -318,85 +330,134 @@ export default class OrderSummary extends React.Component {
             .catch(error => console.log(error));
     }
 
+    handleShowPaymentDetails(payment_id) {
+        this.setState({
+            isPaymentDetailsOpen: true,
+            detailed_payment_id: payment_id,
+        })
+    }
+
+    handleHidePaymentDetails() {
+        this.setState({
+            isPaymentDetailsOpen: false,
+        })
+    }
+
+    handlePendingServiceChanged(service_id) {
+        let updated = JSON.parse(JSON.stringify(this.state.chosenServiceIDs));
+        const index = this.state.chosenServiceIDs.indexOf(service_id);
+        if (index > -1) {
+            updated.splice(index, 1);
+        } else {
+            updated.push(service_id)
+        }
+        this.setState({
+            chosenServiceIDs: updated,
+        })
+    }
+
+    handleProceedPayment() {
+        SessionStorage.put('chosenServiceIDs', JSON.stringify(this.state.chosenServiceIDs));
+        this.setState({
+            redirectToPaymentForm: true
+        })
+    }
+
     render() {
         return (
-            <div>
+            this.state.redirectToPaymentForm ? (
+                <Route>
+                    <Redirect push to={"/payment"} />
+                </Route>
+            ) : (
+                <div>
 
-                <Tabs onChange={this.handleTabChanged}>
+                    <Tabs onChange={this.handleTabChanged}>
 
-                    <Tab id="order" title="Заказ" panel={<Order order={this.state.order}/>} />
+                        <Tab id="order" title="Заказ" panel={<Order order={this.state.order}/>} />
 
-                    <Tab id="guests" title="Гости" panel={
-                        <Guests
-                            order={this.state.order}
-                            onConfirm={this.alertConfirmCompanyWorker}
-                            onReject={this.alertRejectCompanyWorker}
-                            peopleCount={this.state.people_count}
-                            onPeopleCountChange={this.handlePeopleCountChanged}
-                            onConfirmPeopleCount={this.alertConfirmPeopleCount}
-                            peopleCountConfirmed={this.state.order.person_count > 0}
-                        />}
-                    />
-
-                    <Tab id="time" title="Время" panel={
-                        <Time order={this.state.order}
-                            from_date_expected={this.state.from_date_expected}
-                            from_date_actual={this.state.from_date_actual}
-                            to_date_expected={this.state.to_date_expected }
-                            to_date_actual={this.state.to_date_actual}
-                            onCheckIn={this.alertConfirmCheckIn}
-                            onCheckOut={this.alertConfirmCheckOut}
-                        />}
-                    />
-
-                    <Tab id="services" title="Услуги и штрафы" panel={
-                        <Services order={this.state.order}
-                                  onAddService={this.showServiceShop}
-                        />}
-                    />
-
-                    <Tab id="payment" title="Оплата" panel={<Payment order={this.state.order}/>} />
-
-                    <Tabs.Expander />
-
-                </Tabs>
-
-
-                <Overlay
-                    onClose={this.hideServiceShop}
-                    isOpen={this.state.isServiceShopOn}
-                    className={Classes.OVERLAY_SCROLL_CONTAINER}
-                >
-                    <div className={classes}>
-                        <ServiceShop
-                            services={this.state.services}
-                            onServiceChanged={this.handleServiceChanged}
-                            current_service_id={this.state.current_service_id}
-                            current_price={this.state.current_price}
-                            current_amount={this.state.current_amount}
-                            onAmountChanged={value => {this.setState({current_amount: value})}}
-                            onAddItem={this.handleAddItem}
-                            basket={this.state.basket}
-                            onDeleteItem={this.handleDeleteItem}
-                            onSubmit={this.handleSubmitFromServiceShop}
+                        <Tab id="guests" title="Гости" panel={
+                            <Guests
+                                order={this.state.order}
+                                onConfirm={this.alertConfirmCompanyWorker}
+                                onReject={this.alertRejectCompanyWorker}
+                                peopleCount={this.state.people_count}
+                                onPeopleCountChange={this.handlePeopleCountChanged}
+                                onConfirmPeopleCount={this.alertConfirmPeopleCount}
+                                peopleCountConfirmed={this.state.order.person_count > 0}
+                            />}
                         />
-                    </div>
-                </Overlay>
+
+                        <Tab id="time" title="Время" panel={
+                            <Time order={this.state.order}
+                                from_date_expected={this.state.from_date_expected}
+                                from_date_actual={this.state.from_date_actual}
+                                to_date_expected={this.state.to_date_expected }
+                                to_date_actual={this.state.to_date_actual}
+                                onCheckIn={this.alertConfirmCheckIn}
+                                onCheckOut={this.alertConfirmCheckOut}
+                            />}
+                        />
+
+                        <Tab id="services" title="Услуги и штрафы" panel={
+                            <Services order={this.state.order}
+                                      onAddService={this.showServiceShop}
+                            />}
+                        />
+
+                        <Tab id="payment" title="Оплата" panel={
+                            <Payment order={this.state.order}
+                                     onShowPaymentDetails={this.handleShowPaymentDetails}
+                                     onHidePaymentDetails={this.handleHidePaymentDetails}
+                                     isPaymentDetailsOpen={this.state.isPaymentDetailsOpen}
+                                     onPendingServiceChanged={this.handlePendingServiceChanged}
+                                     chosenServiceIDs={this.state.chosenServiceIDs}
+                                     onProceedPayment={this.handleProceedPayment}
+                                     paymentID={this.state.detailed_payment_id}
+                            />}
+                        />
+
+                        <Tabs.Expander />
+
+                    </Tabs>
 
 
-                <Alert
-                    cancelButtonText="Отменить"
-                    confirmButtonText="Продолжить"
-                    intent={Intent.WARNING}
-                    icon={'warning-sign'}
-                    isOpen={this.state.alertIsOpen}
-                    onCancel={this.handleAlertCancel}
-                    onConfirm={this.handleAlertConfirm}
-                >
-                    <p>Вы уверены, что хотите <b>{this.state.alertTooltip}</b>? Это действие необратимо.</p>
-                </Alert>
+                    <Overlay
+                        onClose={this.hideServiceShop}
+                        isOpen={this.state.isServiceShopOn}
+                        className={Classes.OVERLAY_SCROLL_CONTAINER}
+                    >
+                        <div className={classes}>
+                            <ServiceShop
+                                services={this.state.services}
+                                onServiceChanged={this.handleServiceChanged}
+                                current_service_id={this.state.current_service_id}
+                                current_price={this.state.current_price}
+                                current_amount={this.state.current_amount}
+                                onAmountChanged={value => {this.setState({current_amount: value})}}
+                                onAddItem={this.handleAddItem}
+                                basket={this.state.basket}
+                                onDeleteItem={this.handleDeleteItem}
+                                onSubmit={this.handleSubmitFromServiceShop}
+                            />
+                        </div>
+                    </Overlay>
 
-            </div>
+
+                    <Alert
+                        cancelButtonText="Отменить"
+                        confirmButtonText="Продолжить"
+                        intent={Intent.WARNING}
+                        icon={'warning-sign'}
+                        isOpen={this.state.alertIsOpen}
+                        onCancel={this.handleAlertCancel}
+                        onConfirm={this.handleAlertConfirm}
+                    >
+                        <p>Вы уверены, что хотите <b>{this.state.alertTooltip}</b>? Это действие необратимо.</p>
+                    </Alert>
+
+                </div>
+            )
         );
     }
 }

@@ -14,6 +14,7 @@ import OrderSummary from "./components/administrator/order_summary/OrderSummary"
 import OrderReview from "./components/order/OrderReview";
 import EditService from "./components/edit/EditService";
 import ServiceShop from "./components/administrator/ServiceShop";
+import Payment from "./components/payment/Payment";
 
 export const server = 'http://localhost:5000';
 
@@ -44,6 +45,7 @@ const App = () => (
                 <Route exact path='/admin/orders' component={OrdersFilter} />
                 <Route exact path='/admin/order_summary' component={OrderSummary} />
                 <Route exact path='/admin/service_shop' component={ServiceShop} />
+                <Route exact path='/payment' component={Payment} />
                 <Route exact path='/services' component={NotImplemented} />
                 <Route exact path='/contacts' component={NotImplemented} />
                 <Route exact path='/about' component={NotImplemented} />

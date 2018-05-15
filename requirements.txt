@@ -1,3 +1,6 @@
+numpy
+pandas
+click
 dateutil
 PyJWT
 validate_email

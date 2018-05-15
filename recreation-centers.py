@@ -1,6 +1,6 @@
 from app import create_app, db, cli
 from app.models import ClientCategory, Client, RecreationCenter, HouseCategory, HouseObject, House, Order, \
-        OrderStatus, HousePrice, Service, Price
+        OrderStatus, HousePrice, Service, Price, OrderService
 from flask_cors import CORS
 from csv_helper import export_to_csv, import_from_csv
 
@@ -23,6 +23,7 @@ def make_shell_context():
             'Service': Service,
             'Price': Price,
             'HousePrice': HousePrice,
+            'OrderService': OrderService,
             'export_to_csv': export_to_csv,
             'import_from_csv': import_from_csv
             }

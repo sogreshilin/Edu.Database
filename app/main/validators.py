@@ -45,6 +45,13 @@ def validate_date(date: datetime):
         return date
 
 
+def validate_order_service_ids(order: Order, service_ids: list):
+    possible_ids = list(map(lambda order_service: order_service.order_service_id, order.services))
+    if not all(id in possible_ids for id in service_ids):
+        raise ValueError(f'Invalid order service ID')
+    return list(filter(lambda order_service: order_service.order_service_id in service_ids, order.services))
+
+
 def validate_date_earlier(from_date, to_date):
     if from_date >= to_date:
         raise ValueError('Check in date must be earlier than check out date')

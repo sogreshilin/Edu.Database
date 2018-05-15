@@ -1,5 +1,7 @@
 import jwt
 import enum
+
+from dateutil.tz import tzlocal
 from flask import current_app
 from app import db, login
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -115,7 +117,7 @@ class Order(db.Model):
     client_category_confirmed = db.Column(db.Boolean, default=None)
     house_id = db.Column(db.Integer, db.ForeignKey('house.house_id'))
     house = db.relation('House', backref='orders')
-    booking_time = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    booking_time = db.Column(db.DateTime, index=True, default=lambda: datetime.now(tzlocal()))
     checked_in = db.Column(db.Boolean, default=False)
     person_count = db.Column(db.Integer, default=0)
 
@@ -125,6 +127,8 @@ class Order(db.Model):
     check_out_time_actual = db.Column(db.DateTime, default=None)
 
     services = db.relationship('OrderService', back_populates='order')
+    payments = db.relationship('Payment', backref='order')
+
 
     def to_json(self):
         return {
@@ -159,12 +163,23 @@ class Order(db.Model):
                 'check_out_actual': self.check_out_time_actual.isoformat() if self.check_out_time_actual else None,
             },
             'services': [{
-                'id': order_service.service_id,
+                'id': order_service.order_service_id,
                 'name': order_service.service.name,
+                'date': order_service.order_date.isoformat(),
                 'price': order_service.service.price,
                 'amount': order_service.amount,
-                'is_paid': False
-            } for order_service in self.services]
+
+                'is_paid': order_service.is_payed,
+                'payment_id': order_service.payment_id,
+                'payment_date': order_service.payment.date.isoformat() if order_service.payment else None,
+            } for order_service in self.services],
+            'payments': [
+                {
+                'id': payment.payment_id,
+                'date': payment.date.isoformat(),
+                'total': payment.total,
+                'order_service_ids': list(map(lambda service: service.order_service_id, payment.order_services))
+            } for payment in self.payments]
         }
 
     def __repr__(self) -> str:
@@ -203,7 +218,7 @@ class Service(db.Model):
 
     @price.setter
     def price(self, value):
-        price = db.session.query(Price).join(ServicePrice).filter(ServicePrice.service_id == self.service_id)
+        price = db.session.query(Price).join(ServicePrice).filter(ServicePrice.service_id == self.service_id).first()
         price.price = value
 
     def to_json(self):
@@ -221,14 +236,18 @@ class OrderService(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
     service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'))
     amount = db.Column(db.Integer, nullable=False)
+    is_payed = db.Column(db.Boolean, default=False)
+    order_date = db.Column(db.DateTime, default=lambda: datetime.now(tzlocal()))
+    payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'))
     order = db.relationship('Order', back_populates='services')
     service = db.relationship('Service', back_populates='orders')
+    payment = db.relationship('Payment', backref='order_services')
 
 
 class Price(db.Model):
     __tablename__ = 'price'
     price_id = db.Column(db.Integer, primary_key=True)
-    date_when_price_set = db.Column(db.DateTime, default=datetime.utcnow)
+    date_when_price_set = db.Column(db.DateTime, default=lambda: datetime.now(tzlocal()))
     price = db.Column(db.Integer, nullable=False)
 
 
@@ -269,7 +288,9 @@ class Penalty(db.Model):
 class Payment(db.Model):
     __tablename__ = 'payment'
     payment_id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'))
+    date = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(tzlocal()))
+    total = db.Column(db.Integer)
 
 
 class OrderItem(db.Model):

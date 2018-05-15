@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 
 from app.main.validators import *
 from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus, Service, Price, \
-    OrderService
+    OrderService, Payment
 from app.main.email import send_book_confirmation_email
 
 
@@ -127,6 +127,32 @@ def api_current_user():
 def get_upcoming_orders():
     orders = {order.order_id: order.to_json() for order in Order.query.all()}
     return jsonify(orders)
+
+
+@bp.route('/api/payment', methods=['POST'])
+def add_payment():
+    # todo: check that current_user is administrator
+    print(request.json)
+    try:
+        order = validate_order_id(int(request.json['order_id']))
+        order_services = validate_order_service_ids(order, request.json['service_ids'])
+        print('all order services:', order.services)
+        print('filtered:')
+        total = 0
+        payment = Payment(order_id=order.order_id, total=sum(map(
+            lambda order_service: order_service.amount * order_service.service.price, order_services)))
+        db.session.add(payment)
+        db.session.flush()
+        for service in order_services:
+            print(service.service.name)
+            if service.is_payed:
+                raise ValueError(f'Service "{service.service.name}" already payed')
+            service.is_payed = True
+            service.payment = payment
+        db.session.commit()
+    except (ValueError, TypeError) as error:
+        return Response(str(error), status=400)
+    return jsonify(order.to_json())
 
 
 @bp.route('/api/order/add_services', methods=['POST'])

@@ -57,7 +57,7 @@ export default class EditHouseCategory extends React.Component {
     handleSaveClicked() {
         axios.post("http://localhost:5000/api/edit/add_house_category", {
                 name: this.state.name,
-                description: this.state.category_id
+                description: this.state.description
             })
             .then(() => alert('Новая категория успешно сохранена в базу данных'))
             .catch(error => {

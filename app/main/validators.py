@@ -30,12 +30,12 @@ def validate_house_id(id):
         return house
 
 
-def validate_service_id(id):
-    service = Service.query.filter_by(service_id=id).first()
-    if service is None:
-        raise ValueError(f'Service with specified id={id} does not exist')
-    else:
-        return service
+# def validate_service_id(id):
+#     service = Service.query.filter_by(service_id=id).first()
+#     if service is None:
+#         raise ValueError(f'Service with specified id={id} does not exist')
+#     else:
+#         return service
 
 
 def validate_date(date: datetime):
@@ -92,3 +92,19 @@ def validate_order_id(id):
         raise ValueError(f'Order with specified id={id} does not exist')
     else:
         return order
+
+
+def validate_service_id(service_id, _class):
+    service = _class.query.filter_by(service_id=service_id).first()
+    if service is None:
+        raise ValueError(f'Service with specified id={id} does not exist')
+    else:
+        return service
+
+
+def validate_house_category(house_category_id):
+    house_category = HouseCategory.query.filter_by(house_category_id=house_category_id).first()
+    if house_category is None:
+        raise ValueError(f'House category with specified id={id} does not exist')
+    else:
+        return house_category

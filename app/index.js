@@ -8,16 +8,18 @@ import OrderFinalization from './components/order/OrderFinalization';
 import HouseFilter from "./components/house/HouseFilter";
 import EditHouse from "./components/edit/EditHouse";
 import EditHouseCategory from "./components/edit/EditHouseCategory";
-import PriceGenerator from "./components/edit/PriceGenerator";
+import PriceGenerator from "./components/edit/EditHouseRentalPrices";
 import OrdersFilter from "./components/administrator/OrdersFilter";
 import OrderSummary from "./components/administrator/order_summary/OrderSummary";
 import OrderReview from "./components/order/OrderReview";
-import EditService from "./components/edit/EditService";
+import EditHousePrice from "./components/moderator/EditHousePrice";
+import ModeratorMainPage from "./components/moderator/MainPage";
 import { ServiceShop } from "./components/administrator/order_summary/ServiceShop";
 import Payment from "./components/payment/Payment";
 import Landing from "./components/landing/Landing";
 
 import { routes } from './routes'
+import EditService from "./components/moderator/EditService";
 
 export const server = 'http://localhost:5000';
 
@@ -42,6 +44,7 @@ const WrappedComponents = () => (
             <Route exact path={routes.ADD_HOUSE} component={EditHouse} />
             <Route exact path={routes.ADD_HOUSE_CATEGORY} component={EditHouseCategory} />
             <Route exact path={routes.EDIT_SERVICE} component={EditService} />
+            {/*<Route exact path={routes.EDIT} component={EditService} />*/}
             <Route exact path={routes.EDIT_PRICE} component={PriceGenerator} />
             <Route exact path={routes.ADMIN_ORDERS} component={OrdersFilter} />
             <Route exact path={routes.ADMIN_ORDER_SUMMARY} component={OrderSummary} />
@@ -54,9 +57,6 @@ const WrappedComponents = () => (
         </Switch>
     </div>
 );
-
-
-
 
 
 const App = () => (

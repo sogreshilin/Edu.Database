@@ -42,6 +42,9 @@ def create_app(config_class=Config):
     from app.edit import bp as edit_bp
     app.register_blueprint(edit_bp)
 
+    from app.service import bp as service_bp
+    app.register_blueprint(service_bp)
+
     return app
 
 

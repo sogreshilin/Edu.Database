@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import dateutil
 from sqlalchemy import and_, func, or_
@@ -11,8 +11,8 @@ from flask_babel import _
 from flask_login import login_required, current_user
 
 from app.main.validators import *
-from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus, Service, Price, \
-    OrderService, Payment
+from app.models import House, Order, HouseCategory, Client, ClientCategory, OrderStatus, Service, \
+    OrderService, Payment, ServicePrice, HouseRental, Holiday, DateType
 from app.main.email import send_book_confirmation_email
 
 
@@ -20,12 +20,25 @@ from app.main.email import send_book_confirmation_email
 def inject_now():
     return dict(now=datetime.utcnow())
 
-def get_house_total_cost(house_category_id, client_category, from_date, to_date):
-    condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
-                 (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
 
-    result = db.session.query(func.sum(Price.price)).join(HousePrice).filter(condition).scalar()
-    return result
+def date_range(start_date, end_date):
+    for n in range(int((end_date - start_date).days) + 1):
+        yield start_date + timedelta(n)
+
+
+def get_house_total_cost(house_category_id, client_category, from_date, to_date):
+    return sum([HouseRental.query
+               .filter(and_(HouseRental.client_category == client_category,
+                       HouseRental.house_category_id == house_category_id,
+                       HouseRental.date_type == DateType.get_date_type(date))
+                       ).first().super_service.actual_price().value
+               for date in date_range(from_date, to_date)])
+
+
+@bp.route('/', defaults={'path': ''})
+@bp.route('/<path:path>')
+def catch_all(path):
+    return render_template('index.html')
 
 
 @bp.route('/api/houses')
@@ -87,11 +100,12 @@ def get_free_houses():
         return Response(str(error), status=400)
     occupied_house_ids = db.session.query(Order.house_id) \
         .filter(and_(Order.status != OrderStatus.CANCELED, or_(
-            and_(from_date <= Order.check_in_time_expected, Order.check_in_time_expected <= to_date),
-            and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date))))
+        and_(from_date <= Order.check_in_time_expected, Order.check_in_time_expected <= to_date),
+        and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date))))
     free_houses = list(map(lambda elem: elem[0], db.session.query(House.house_id, House.house_category_id)
                            .filter(~House.house_id.in_(occupied_house_ids)).all()))
-    house_and_category = db.session.query(House.house_id, House.house_category_id).filter(~House.house_id.in_(occupied_house_ids)).all()
+    house_and_category = db.session.query(House.house_id, House.house_category_id).filter(
+        ~House.house_id.in_(occupied_house_ids)).all()
 
     house_prices = dict()
     for house_id, house_category_id in house_and_category:
@@ -261,6 +275,7 @@ def api_book():
         middle_name = content['middle_name']
         email = validate_email(content['email'])
         phone = validate_phone(content['phone'])
+
     except ValueError as error:
         return Response(str(error), status=400)
 
@@ -301,6 +316,11 @@ def order_review(id: int):
         return jsonify(order_info.to_json())
     else:
         return Response(status=404)
+
+
+@bp.route('/api/house_categories')
+def get_house_categories():
+    return jsonify([category.to_json() for category in HouseCategory.query.all()])
 
 
 @bp.route('/api/orders/<int:order_id>/cancel', methods=['PATCH'])

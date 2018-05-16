@@ -68,24 +68,29 @@ class OrderStatus(enum.Enum):
     CANCELED = 4
 
 
-class Extra(enum.Enum):
-    EXTRA_HOUR = 1
-    EXTRA_PERSON = 2
-
-
-house_category_object = db.Table('house_category_object', db.metadata,
-                                 db.Column('house_category_id', db.Integer,
-                                           db.ForeignKey('house_category.house_category_id')),
-                                 db.Column('object_id', db.Integer, db.ForeignKey('house_object.object_id')))
+# class Extra(enum.Enum):
+#     EXTRA_HOUR = 1
+#     EXTRA_PERSON = 2
+#
+#
+# house_category_object = db.Table('house_category_object', db.metadata,
+#                                  db.Column('house_category_id', db.Integer,
+#                                            db.ForeignKey('house_category.house_category_id')),
+#                                  db.Column('object_id', db.Integer, db.ForeignKey('house_object.object_id')))
 
 
 class HouseCategory(db.Model):
     __tablename__ = 'house_category'
     house_category_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
-    center_id = db.Column(db.Integer, db.ForeignKey('recreation_center.center_id'))
     description = db.Column(db.Text)
-    objects = db.relationship('HouseObject', secondary=house_category_object)
+
+    def to_json(self):
+        return {
+            'id': self.house_category_id,
+            'name': self.name,
+            'description': self.description,
+        }
 
 
 class House(db.Model):
@@ -129,7 +134,6 @@ class Order(db.Model):
     services = db.relationship('OrderService', back_populates='order')
     payments = db.relationship('Payment', backref='order')
 
-
     def to_json(self):
         return {
             'id': self.order_id,
@@ -166,7 +170,7 @@ class Order(db.Model):
                 'id': order_service.order_service_id,
                 'name': order_service.service.name,
                 'date': order_service.order_date.isoformat(),
-                'price': order_service.service.price,
+                'price': order_service.service.actual_price(),
                 'amount': order_service.amount,
 
                 'is_paid': order_service.is_payed,
@@ -175,11 +179,11 @@ class Order(db.Model):
             } for order_service in self.services],
             'payments': [
                 {
-                'id': payment.payment_id,
-                'date': payment.date.isoformat(),
-                'total': payment.total,
-                'order_service_ids': list(map(lambda service: service.order_service_id, payment.order_services))
-            } for payment in self.payments]
+                    'id': payment.payment_id,
+                    'date': payment.date.isoformat(),
+                    'total': payment.total,
+                    'order_service_ids': list(map(lambda service: service.order_service_id, payment.order_services))
+                } for payment in self.payments]
         }
 
     def __repr__(self) -> str:
@@ -190,44 +194,134 @@ class Order(db.Model):
                f'checked_in={self.checked_in})'
 
 
-class RecreationCenter(db.Model):
-    __tablename__ = 'recreation_center'
-    center_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True, nullable=False)
-    description = db.Column(db.Text)
-    house_categories = db.relationship('HouseCategory', backref='recreation_center')
+# class RecreationCenter(db.Model):
+#     __tablename__ = 'recreation_center'
+#     center_id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(64), unique=True, nullable=False)
+#     description = db.Column(db.Text)
+#     house_categories = db.relationship('HouseCategory', backref='recreation_center')
 
 
-class HouseObject(db.Model):
-    __tablename__ = 'house_object'
-    object_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
-    description = db.Column(db.Text)
+class Holiday(db.Model):
+    __tablename__ = 'holiday'
+    date = db.Column(db.DateTime, primary_key=True)
 
 
 class Service(db.Model):
     __tablename__ = 'service'
     service_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), nullable=False)
+    available = db.Column(db.Boolean, default=True)
+    name = db.Column(db.String(128), nullable=False)
     description = db.Column(db.Text)
-    orders = db.relationship("OrderService", back_populates="service")
 
-    @property
-    def price(self):
-        return db.session.query(Price.price).join(ServicePrice).filter(ServicePrice.service_id == self.service_id).scalar()
+    prices = db.relationship('ServicePrice', backref='service')
+    orders = db.relationship('OrderService', back_populates='service')
+    # sub_service = db.relationship('Service', backref='super_service')
 
-    @price.setter
-    def price(self, value):
-        price = db.session.query(Price).join(ServicePrice).filter(ServicePrice.service_id == self.service_id).first()
-        price.price = value
+    def price_at(self, date):
+        sorted_prices = sorted(self.prices, key=lambda price: price.date_modified, reverse=True)
+        return next(filter(lambda price: price.date_modified < date, sorted_prices), None)
+
+    def actual_price(self):
+        return self.price_at(datetime.now())
 
     def to_json(self):
         return {
             'id': self.service_id,
+            'available': self.available,
             'name': self.name,
             'description': self.description,
-            'price': self.price,
+            'price': self.prices[-1].value,
         }
+
+
+class DateType(enum.Enum):
+    HOLIDAY = 1
+    WEEKEND = 2
+    WEEKDAY = 3
+
+    @staticmethod
+    def is_weekend(date):
+        return date.weekday() in (4, 5, 6)
+
+    @staticmethod
+    def get_date_type(date):
+        if date in Holiday.query.all():
+            return DateType.HOLIDAY
+        elif DateType.is_weekend(date):
+            return DateType.WEEKEND
+        else:
+            return DateType.WEEKDAY
+
+
+# @extends Service
+class HouseRental(db.Model):
+    __tablename__ = 'house_rental'
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'), primary_key=True)
+    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
+    client_category = db.Column(db.Enum(ClientCategory))
+    date_type = db.Column(db.Enum(DateType))
+    # super_service = db.relationship('Service', backref='sub_service')
+
+    @property
+    def super_service(self):
+        return Service.query.filter(Service.service_id == self.service_id).first()
+
+
+# @extends Service
+class Excess(db.Model):
+    __tablename__ = 'excess'
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'), primary_key=True)
+    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
+
+    @property
+    def super_service(self):
+        return Service.query.filter(Service.service_id == self.service_id).first()
+
+    # super_service = db.relationship('Service', backref='sub_service')
+
+
+# @extends Service
+class Extra(db.Model):
+    __tablename__ = 'extra'
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'), primary_key=True)
+    # super_service = db.relationship('Service', backref='sub_service')
+
+    @property
+    def super_service(self):
+        return Service.query.filter(Service.service_id == self.service_id).first()
+
+    def to_json(self):
+        return {
+            'id': self.service_id,
+            'available': self.super_service.available,
+            'name': self.super_service.name,
+            'description': self.super_service.description,
+            'price': self.super_service.prices[-1].value,
+        }
+
+
+# @extends Service
+class Penalty(db.Model):
+    __tablename__ = 'penalty'
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'), primary_key=True)
+    # super_service = db.relationship('Service', backref='sub_service')
+
+    @property
+    def super_service(self):
+        return Service.query.filter(Service.service_id == self.service_id).first()
+
+
+class ServicePrice(db.Model):
+    __tablename__ = 'service_price'
+    price_id = db.Column(db.Integer, primary_key=True)
+    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'))
+    date_modified = db.Column(db.DateTime, default=lambda: datetime.now(tzlocal()))
+    value = db.Column(db.Integer, default=0)
+
+    @property
+    def super_service(self):
+        return Service.query.filter(Service.service_id == self.service_id).first()
 
 
 class OrderService(db.Model):
@@ -244,45 +338,45 @@ class OrderService(db.Model):
     payment = db.relationship('Payment', backref='order_services')
 
 
-class Price(db.Model):
-    __tablename__ = 'price'
-    price_id = db.Column(db.Integer, primary_key=True)
-    date_when_price_set = db.Column(db.DateTime, default=lambda: datetime.now(tzlocal()))
-    price = db.Column(db.Integer, nullable=False)
+# class Price(db.Model):
+#     __tablename__ = 'price'
+#     price_id = db.Column(db.Integer, primary_key=True)
+#     date_when_price_set = db.Column(db.DateTime, default=lambda: datetime.now(tzlocal()))
+#     value = db.Column(db.Integer, nullable=False)
 
 
-class HousePrice(db.Model):
-    __tablename__ = 'house_price'
-    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
-    date = db.Column(db.DateTime, index=True)
-    client_category = db.Column(db.Enum(ClientCategory))
-    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
+# class HousePrice(db.Model):
+#     __tablename__ = 'house_price'
+#     price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+#     date = db.Column(db.DateTime, index=True)
+#     client_category = db.Column(db.Enum(ClientCategory))
+#     house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
+#
+#
+# class SurchargePrice(db.Model):
+#     __tablename__ = 'surcharge_price'
+#     price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+#     surcharge_for = db.Column(db.Enum(Extra))
+#     house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
+#
+#
+# class ServicePrice(db.Model):
+#     __tablename__ = 'service_price'
+#     price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+#     service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'))
+#
+#
+# class PenaltyPrice(db.Model):
+#     __tablename__ = 'penalty_price'
+#     price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+#     penalty_id = db.Column(db.Integer, db.ForeignKey('penalty.penalty_id'))
 
 
-class SurchargePrice(db.Model):
-    __tablename__ = 'surcharge_price'
-    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
-    surcharge_for = db.Column(db.Enum(Extra))
-    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
-
-
-class ServicePrice(db.Model):
-    __tablename__ = 'service_price'
-    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
-    service_id = db.Column(db.Integer, db.ForeignKey('service.service_id'))
-
-
-class PenaltyPrice(db.Model):
-    __tablename__ = 'penalty_price'
-    price_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
-    penalty_id = db.Column(db.Integer, db.ForeignKey('penalty.penalty_id'))
-
-
-class Penalty(db.Model):
-    __tablename__ = 'penalty'
-    penalty_id = db.Column(db.Integer, primary_key=True)
-    penalty_name = db.Column(db.String(64), nullable=False)
-    penalty_description = db.Column(db.Text)
+# class Penalty(db.Model):
+#     __tablename__ = 'penalty'
+#     penalty_id = db.Column(db.Integer, primary_key=True)
+#     penalty_name = db.Column(db.String(64), nullable=False)
+#     penalty_description = db.Column(db.Text)
 
 
 class Payment(db.Model):
@@ -293,12 +387,12 @@ class Payment(db.Model):
     total = db.Column(db.Integer)
 
 
-class OrderItem(db.Model):
-    __tablename__ = 'item'
-    order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'), primary_key=True)
-    item_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
-    # if null => item was not payed yet
-    payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'), nullable=True)
+# class OrderItem(db.Model):
+#     __tablename__ = 'item'
+#     order_id = db.Column(db.Integer, db.ForeignKey('order.order_id'), primary_key=True)
+#     item_id = db.Column(db.Integer, db.ForeignKey('price.price_id'), primary_key=True)
+#     # if null => item was not payed yet
+#     payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'), nullable=True)
 
 #
 # class PaymentMethod(db.Model):
@@ -328,3 +422,10 @@ class OrderItem(db.Model):
 #     __tablename__ = 'cashless_transaction'
 #     transaction_id = db.Column(db.Integer, primary_key=True)
 #     payment_id = db.Column(db.Integer, db.ForeignKey('payment.payment_id'))
+
+
+# class HouseObject(db.Model):
+#     __tablename__ = 'house_object'
+#     object_id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(64), nullable=False)
+#     description = db.Column(db.Text)

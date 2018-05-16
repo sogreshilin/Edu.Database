@@ -3,7 +3,7 @@ import axios from "axios/index";
 import {server} from "../../index";
 import {ClientCategoryCodes, ClientCategoryText} from "../client/client";
 import {Tab, Tabs, NumericInput, Classes, Button, Intent, Spinner} from "@blueprintjs/core";
-import EditHouse from "./EditHouse";
+import EditHouse from "../edit/EditHouse";
 
 const DateType = {
     1: 'Праздники',
@@ -99,9 +99,9 @@ const EditHouseRental = ({house_rental, house_categories, onPriceChanged, handle
                 )
             }
             </Tabs>
-            <Button intent={Intent.SUCCESS} icon={'document-share'} onClick={handleSaveData} text={'Сохранить'}/>
+            <Button intent={Intent.PRIMARY} icon={'document-share'} onClick={handleSaveData} text={'Сохранить'}/>
             {
-                uploading ? <Spinner small intent={Intent.SUCCESS}/> : <div/>
+                uploading ? <Spinner small intent={Intent.PRIMARY}/> : <div/>
             }
         </div>
     );
@@ -175,29 +175,13 @@ export default class EditHousePrice extends React.Component {
     render() {
         return (
             <div>
-                <Tabs onChange={this.handleTabChanged}>
-                    <Tab
-                        id={'house_rental'}
-                        title={'Цена домов'}
-                        panel={
-                            <EditHouseRental house_rental={this.state.house_rental}
-                                     house_categories={this.state.house_categories}
-                                     onPriceChanged={this.onPriceChanged}
-                                     handleSaveData={this.handleSaveHouseRental}
-                                     uploading={this.state.uploading}
-                                     handleTabChanged={this.handleDateTypeTabChanged}
-                            />
-                        }
-                    />
-                    <Tab
-                        id={'house'}
-                        title={'Дом'}
-                        panel={
-                            <EditHouse/>
-                        }
-                    />
-
-                </Tabs>
+                <EditHouseRental house_rental={this.state.house_rental}
+                         house_categories={this.state.house_categories}
+                         onPriceChanged={this.onPriceChanged}
+                         handleSaveData={this.handleSaveHouseRental}
+                         uploading={this.state.uploading}
+                         handleTabChanged={this.handleDateTypeTabChanged}
+                />
             </div>
         );
     }

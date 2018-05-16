@@ -12,8 +12,10 @@ import {
     NumericInput,
     Label,
     TextArea,
-    Card
+    Card,
+    Dialog
 } from "@blueprintjs/core";
+import {ClientCategoryCodes, ClientCategoryText} from "../client/client";
 
 const OVERLAY_EXAMPLE_CLASS = "docs-overlay-example-transition";
 const classes = classNames(Classes.CARD, Classes.ELEVATION_4, OVERLAY_EXAMPLE_CLASS);
@@ -23,18 +25,15 @@ const State = {
     Edit: 2,
 };
 
-const ServiceCard = ({service, onEdit, onDelete}) => {
+const ServiceRow = ({index, service, onEdit, onDelete}) => {
     return (
-        <Card
-            key={service.id}
-            interactive={true}
-        >
-            <h5>{service.name}</h5>
-            <p>{service.description}</p>
-            <p>Цена: {service.price}</p>
-            <Button icon={'edit'} onClick={() => onEdit(service.id)} text={'Изменить'} intent={Intent.PRIMARY} />
-            <Button icon={'delete'} onClick={() => onDelete(service.id)} text={'Удалить'} intent={Intent.DANGER} />
-        </Card>
+        <tr>
+            <td>{index}</td>
+            <td>{service.name}</td>
+            <td>{service.price}</td>
+            <td><Button icon={'edit'} onClick={() => onEdit(service.id)} text={'Изменить'} intent={Intent.PRIMARY} /></td>
+            <td><Button icon={'delete'} onClick={() => onDelete(service.id)} text={'Удалить'} intent={Intent.DANGER} /></td>
+        </tr>
     );
 };
 
@@ -141,17 +140,17 @@ export default class EditService extends React.Component {
     render() {
         return (
             <div className="docs-dialog-example">
-                <Overlay
+                <Dialog
                     onClose={this.handleCancel}
                     isOpen={this.state.overlayIsOpen}
                     className={Classes.OVERLAY_SCROLL_CONTAINER}
+                    title="Добавить услугу"
                 >
-                    <div className={classes}>
+                    <div className="pt-dialog-body">
                         <Label text={'Наименование'} helperText={'*'}>
-                            <EditableText
-                                onChange={value => {this.setState({current_name: value})}}
-                                value={this.state.current_name}
-                            />
+                            <input className="pt-input" placeholder="Введите название"
+                                   onChange={value => {this.setState({current_name: value.target.value})}}
+                                value={this.state.current_name}/>
                         </Label>
                         <Label text={'Цена за единицу'} helperText={'*'}>
                             <NumericInput
@@ -162,25 +161,49 @@ export default class EditService extends React.Component {
                                 min={0}
                                 onValueChange={value => {this.setState({current_price: value})}}
                                 value={this.state.current_price}
+                                placeholder="Установите цену"
                             />
                         </Label>
                         <Label text={'Описание'}>
                             <TextArea fill={true}
                                 onChange={handleStringChange(textContent => this.setState({ current_description: textContent }))}
                                 value={this.state.current_description}
+                                      placeholder="Введите описание"
                                 />
                         </Label>
 
-                        <Button intent={Intent.DANGER} onClick={this.handleCancel} text={'Отменить'}/>
-                        <Button intent={Intent.SUCCESS} onClick={this.handleSave} text={'Сохранить'}/>
+                        <div className="pt-dialog-footer">
+                        <div className="pt-dialog-footer-actions">
+                            <Button intent={Intent.NONE} onClick={this.handleCancel} text={'Отменить'}/>
+                            <Button intent={Intent.PRIMARY} onClick={this.handleSave} text={'Сохранить'}/>
+
+                        </div>
                     </div>
 
-                </Overlay>
 
-                <Button onClick={this.handleCreate} text='Добавить' />
+                    </div>
+                </Dialog>
 
-                { Object.values(this.state.services).filter(service => service.available).map(service =>
-                    <ServiceCard service={service} onEdit={this.handleEdit} onDelete={this.handleDelete}/>) }
+
+                <table className="pt-html-table">
+                    <thead>
+                        <tr>
+                            <td>№</td>
+                            <td>Наименование услуги</td>
+                            <td>Установленная цена</td>
+                            <td>Редактировать</td>
+                            <td>Удалить</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {
+                        Object.values(this.state.services).filter(service => service.available).map((service, index) =>
+                        <ServiceRow key={service.id} index={index + 1} service={service} onEdit={this.handleEdit} onDelete={this.handleDelete}/>)
+                    }
+                    </tbody>
+                </table>
+
+                <Button onClick={this.handleCreate} intent={Intent.PRIMARY} icon="add" text='Добавить' />
 
             </div>
         )

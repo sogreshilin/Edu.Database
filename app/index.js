@@ -13,9 +13,11 @@ import OrdersFilter from "./components/administrator/OrdersFilter";
 import OrderSummary from "./components/administrator/order_summary/OrderSummary";
 import OrderReview from "./components/order/OrderReview";
 import EditService from "./components/edit/EditService";
-import ServiceShop from "./components/administrator/order_summary/ServiceShop";
+import { ServiceShop } from "./components/administrator/order_summary/ServiceShop";
 import Payment from "./components/payment/Payment";
 import Landing from "./components/landing/Landing";
+
+import { routes } from './routes'
 
 export const server = 'http://localhost:5000';
 
@@ -34,20 +36,20 @@ const NotImplemented = () => (
 const WrappedComponents = () => (
     <div className={'container'}>
         <Switch>
-            <Route exact path='/orders/finish' component={OrderFinalization} />
-            <Route path='/orders/:id' component={OrderReview} />
-            <Route exact path='/filter' component={HouseFilter} />
-            <Route exact path='/edit/add_house' component={EditHouse} />
-            <Route exact path='/edit/add_house_category' component={EditHouseCategory} />
-            <Route exact path='/edit/service' component={EditService} />
-            <Route exact path='/edit/price' component={PriceGenerator} />
-            <Route exact path='/admin/orders' component={OrdersFilter} />
-            <Route exact path='/admin/order_summary' component={OrderSummary} />
-            <Route exact path='/admin/service_shop' component={ServiceShop} />
-            <Route exact path='/payment' component={Payment} />
-            <Route exact path='/services' component={NotImplemented} />
-            <Route exact path='/contacts' component={NotImplemented} />
-            <Route exact path='/about' component={NotImplemented} />
+            <Route exact path={routes.ORDER_FINISH} component={OrderFinalization} />
+            <Route path={routes.ORDER} component={OrderReview} />
+            <Route exact path={routes.BOOK_HOUSE} component={HouseFilter} />
+            <Route exact path={routes.ADD_HOUSE} component={EditHouse} />
+            <Route exact path={routes.ADD_HOUSE_CATEGORY} component={EditHouseCategory} />
+            <Route exact path={routes.EDIT_SERVICE} component={EditService} />
+            <Route exact path={routes.EDIT_PRICE} component={PriceGenerator} />
+            <Route exact path={routes.ADMIN_ORDERS} component={OrdersFilter} />
+            <Route exact path={routes.ADMIN_ORDER_SUMMARY} component={OrderSummary} />
+            <Route exact path={routes.ADMIN_SERVICE_SHOP} component={ServiceShop} />
+            <Route exact path={routes.PAYMENT} component={Payment} />
+            <Route exact path={routes.SERVICES} component={NotImplemented} />
+            <Route exact path={routes.CONTACTS} component={NotImplemented} />
+            <Route exact path={routes.ABOUT} component={NotImplemented} />
             <Route component={NotFound} />
         </Switch>
     </div>

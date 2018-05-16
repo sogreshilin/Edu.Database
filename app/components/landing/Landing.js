@@ -4,6 +4,9 @@ import ImageGallery from 'react-image-gallery';
 
 import styles from './landing.scss';
 
+import { routes } from '../../routes';
+
+
 const landingText = "Отдых в живописном районе Восточного Казахстана";
 
 const smoothAnchorScroll = (elementId) => {
@@ -25,7 +28,7 @@ const LandingImageBlock = ({ onDetailsClick }) => {
                         <div className={'landing-buttons-section'}>
                             <div className={'landing-buttons'}>
                                 <div className={'action-button'}>
-                                    <Link to='/filter'>Забронировать</Link>
+                                    <Link to={routes.BOOK_HOUSE}>Забронировать</Link>
                                 </div>
                                 <div className={'details-button'}>
                                     <a onClick={onDetailsClick}>Подробности</a>
@@ -65,7 +68,7 @@ const AccommodationInformation = () => (
                 <p>Вместимость каждой квартиры - 5 человек</p>
                 <p>Все квартиры оснащены кухонным оборудованием и инвентарем, имеется санузел с душевой кабиной</p>
                 <div className={"all-services-wrapper"}>
-                    <Link className={'standard-link-button'} to='/services'>Все услуги</Link>
+                    <Link className={'standard-link-button'} to={routes.SERVICES}>Все услуги</Link>
                 </div>
             </div>
         </div>
@@ -78,7 +81,7 @@ const BookOfferReminder = () => (
     <section className={'book-offer-reminder-block'}>
         <p>Не отказывайте себе в приятном отдыхе</p>
         <div>
-            <Link className={'standard-link-button'} to={'/filter'}>Забронировать дом</Link>
+            <Link className={'standard-link-button'} to={routes.BOOK_HOUSE}>Забронировать дом</Link>
         </div>
     </section>
 );

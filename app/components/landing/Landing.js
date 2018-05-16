@@ -112,12 +112,53 @@ const urlGenerator = "http://dosug-vko.kz/images/slider/baza-sinegorje/sl";
 const galleryUrls = Range(2, 18).map(index => ({ original: `${urlGenerator}-${index}.jpg` }));
 
 const ImageGalleryBlock = () => (
-    <div className={'image-gallery-block'}>
+    <section className={'image-gallery-block'}>
         <ImageGallery items={galleryUrls}
                       showThumbnails={false}
                       showBullets
         />
+    </section>
+);
+
+
+const ListPairItem = ({ title, description }) => (
+    <div className={'list-pair-item'}>
+        <p className={'list-pair-first-item'}>{title}</p>
+        <p className={'list-pair-second-item'}>{description}</p>
     </div>
+);
+
+const hqAddress = "Республика Казахстан, Восточно-Казахстанская область, г. Риддер";
+
+const ContactInformation = () => (
+    <section className={'contacts-block'}>
+        <div className={'left-col'}>
+            <h3>Контакты</h3>
+            <div className={'list-pair'}>
+                <ListPairItem title={"Телефон"} description={"+7 (72336) 303-30, +7 (777) 201-18-67"} />
+                {/*<ListPairItem title={""} description={"+7 (777) 201-18-67"} />*/}
+                <ListPairItem title={"Отдел продаж"} description={"8 (7232) 76-81-43"} />
+                <ListPairItem title={"Адрес"} description={hqAddress} />
+                <div className={'list-pair-item'}>
+                    <p className={'list-pair-first-item'}>Дорога</p>
+                    <ul>
+                        <li>Рейсовый автобус до г. Усть-Каменогорск</li>
+                        <li>Автобус "Автовокзал - Риддер", остановка "ЛесХоз"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div className={'right-col'}>
+            <div className={'map-container'} />
+            {/*<iframe*/}
+                {/*width="600"*/}
+                {/*height="450"*/}
+                {/*frameBorder="0"*/}
+                {/*src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBHZgjeDjwizEwx1AnnUgxXtPQVIgvTNcE&q=Gromotukha" allowFullScreen>*/}
+{/*</iframe>*/}
+        </div>
+
+    </section>
 );
 
 
@@ -134,7 +175,7 @@ export default class Landing extends Component {
                 <AccommodationInformation />
                 <ImageGalleryBlock />
                 <BookOfferReminder />
-                <hr/>
+                <ContactInformation />
                 <SubscriptionOffer />
             </div>
         );

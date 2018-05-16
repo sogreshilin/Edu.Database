@@ -63,7 +63,7 @@ export default class EditService extends React.Component {
     }
 
     componentDidMount() {
-        axios.get(server + '/api/services')
+        axios.get(server + '/api/extras')
             .then(result => this.setState({
                 services: result.data
             }))
@@ -96,7 +96,7 @@ export default class EditService extends React.Component {
     }
 
     handleDelete(service_id) {
-        axios.post(server + '/api/edit/delete_service', { id: service_id })
+        axios.post(server + '/api/remove/extra', { id: service_id })
             .then(result => this.setState({services: result.data}))
     }
 
@@ -105,7 +105,7 @@ export default class EditService extends React.Component {
         let data = {};
         switch (this.state.state) {
             case State.Create:
-                resource = '/api/edit/add_service';
+                resource = '/api/add/extra';
                 data = {
                     name: this.state.current_name,
                     price: this.state.current_price,
@@ -113,7 +113,7 @@ export default class EditService extends React.Component {
                 };
                 break;
             case State.Edit:
-                resource = '/api/edit/edit_service';
+                resource = '/api/edit/extra';
                 data = {
                     id: this.state.service_id,
                     name: this.state.current_name,
@@ -179,7 +179,7 @@ export default class EditService extends React.Component {
 
                 <Button onClick={this.handleCreate} text='Добавить' />
 
-                { Object.values(this.state.services).map(service =>
+                { Object.values(this.state.services).filter(service => service.available).map(service =>
                     <ServiceCard service={service} onEdit={this.handleEdit} onDelete={this.handleDelete}/>) }
 
             </div>

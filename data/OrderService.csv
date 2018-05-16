@@ -1,4 +1,0 @@
-order_service_id,order_id,service_id,amount,is_payed,order_date,payment_id
-1,1,5,2,True,2018-05-16 00:51:38.046931,1
-2,1,1,2,False,2018-05-16 00:51:38.047846,
-3,1,2,1,False,2018-05-16 00:51:38.048118,

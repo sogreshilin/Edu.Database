@@ -8,13 +8,15 @@ import OrderFinalization from './components/order/OrderFinalization';
 import HouseFilter from "./components/house/HouseFilter";
 import EditHouse from "./components/edit/EditHouse";
 import EditHouseCategory from "./components/edit/EditHouseCategory";
-import PriceGenerator from "./components/edit/PriceGenerator";
+import PriceGenerator from "./components/edit/EditHouseRentalPrices";
 import OrdersFilter from "./components/administrator/OrdersFilter";
 import OrderSummary from "./components/administrator/order_summary/OrderSummary";
 import OrderReview from "./components/order/OrderReview";
-import EditService from "./components/edit/EditService";
+import EditService from "./components/moderator/EditService";
 import ServiceShop from "./components/administrator/ServiceShop";
 import Payment from "./components/payment/Payment";
+import EditHousePrice from "./components/moderator/EditHousePrice";
+import ModeratorMainPage from "./components/moderator/MainPage";
 
 export const server = 'http://localhost:5000';
 
@@ -42,6 +44,8 @@ const App = () => (
                 <Route exact path='/edit/add_house_category' component={EditHouseCategory} />
                 <Route exact path='/edit/service' component={EditService} />
                 <Route exact path='/edit/price' component={PriceGenerator} />
+                <Route exact path='/edit/prices' component={EditHousePrice} />
+                <Route exact path='/edit' component={ModeratorMainPage} />
                 <Route exact path='/admin/orders' component={OrdersFilter} />
                 <Route exact path='/admin/order_summary' component={OrderSummary} />
                 <Route exact path='/admin/service_shop' component={ServiceShop} />

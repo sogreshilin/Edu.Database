@@ -11,7 +11,7 @@ from flask_babel import _
 from flask_login import login_required, current_user
 
 from app.main.validators import *
-from app.models import House, Order, HouseCategory, Client, ClientCategory, HousePrice, OrderStatus, Service, Price, \
+from app.models import House, Order, HouseCategory, Client, ClientCategory, OrderStatus, Service, \
     OrderService, Payment
 from app.main.email import send_book_confirmation_email
 
@@ -20,12 +20,20 @@ from app.main.email import send_book_confirmation_email
 def inject_now():
     return dict(now=datetime.utcnow())
 
-def get_house_total_cost(house_category_id, client_category, from_date, to_date):
-    condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
-                 (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
 
-    result = db.session.query(func.sum(Price.price)).join(HousePrice).filter(condition).scalar()
-    return result
+def get_house_total_cost(house_category_id, client_category, from_date, to_date):
+    raise NotImplemented
+    # condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
+    #              (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
+    #
+    # result = db.session.query(func.sum(Price.price)).join(HousePrice).filter(condition).scalar()
+    # return result
+
+
+@bp.route('/', defaults={'path': ''})
+@bp.route('/<path:path>')
+def catch_all(path):
+    return render_template('index.html')
 
 
 @bp.route('/api/houses')
@@ -261,6 +269,7 @@ def api_book():
         middle_name = content['middle_name']
         email = validate_email(content['email'])
         phone = validate_phone(content['phone'])
+
     except ValueError as error:
         return Response(str(error), status=400)
 
@@ -303,6 +312,11 @@ def order_review(id: int):
         return Response(status=404)
 
 
+@bp.route('/api/house_categories')
+def get_house_categories():
+    return jsonify([category.to_json() for category in HouseCategory.query.all()])
+
+
 @bp.route('/api/orders/<int:order_id>/cancel', methods=['PATCH'])
 def cancel_order(order_id: int):
     order_info = Order.query.filter_by(order_id=order_id).first()
@@ -327,3 +341,5 @@ def cancel_order(order_id: int):
         return response
     else:
         return Response(status=404)
+
+

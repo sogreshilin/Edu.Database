@@ -240,6 +240,19 @@ class DateType(enum.Enum):
     WEEKEND = 2
     WEEKDAY = 3
 
+    @staticmethod
+    def is_weekend(date):
+        return date.weekday() in (4, 5, 6)
+
+    @staticmethod
+    def get_date_type(date):
+        if date in Holiday.query.all():
+            return DateType.HOLIDAY
+        elif DateType.is_weekend(date):
+            return DateType.WEEKEND
+        else:
+            return DateType.WEEKDAY
+
 
 # @extends Service
 class HouseRental(db.Model):

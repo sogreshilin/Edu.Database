@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import dateutil
 from sqlalchemy import and_, func, or_
@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 
 from app.main.validators import *
 from app.models import House, Order, HouseCategory, Client, ClientCategory, OrderStatus, Service, \
-    OrderService, Payment
+    OrderService, Payment, ServicePrice, HouseRental, Holiday, DateType
 from app.main.email import send_book_confirmation_email
 
 
@@ -21,13 +21,18 @@ def inject_now():
     return dict(now=datetime.utcnow())
 
 
+def date_range(start_date, end_date):
+    for n in range(int((end_date - start_date).days) + 1):
+        yield start_date + timedelta(n)
+
+
 def get_house_total_cost(house_category_id, client_category, from_date, to_date):
-    raise NotImplemented
-    # condition = ((from_date <= HousePrice.date) & (HousePrice.date <= to_date) &
-    #              (HousePrice.house_category_id == house_category_id) & (HousePrice.client_category == client_category))
-    #
-    # result = db.session.query(func.sum(Price.price)).join(HousePrice).filter(condition).scalar()
-    # return result
+    return sum([HouseRental.query
+               .filter(and_(HouseRental.client_category == client_category,
+                       HouseRental.house_category_id == house_category_id,
+                       HouseRental.date_type == DateType.get_date_type(date))
+                       ).first().super_service.actual_price().value
+               for date in date_range(from_date, to_date)])
 
 
 @bp.route('/', defaults={'path': ''})
@@ -95,11 +100,12 @@ def get_free_houses():
         return Response(str(error), status=400)
     occupied_house_ids = db.session.query(Order.house_id) \
         .filter(and_(Order.status != OrderStatus.CANCELED, or_(
-            and_(from_date <= Order.check_in_time_expected, Order.check_in_time_expected <= to_date),
-            and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date))))
+        and_(from_date <= Order.check_in_time_expected, Order.check_in_time_expected <= to_date),
+        and_(from_date <= Order.check_out_time_expected, Order.check_out_time_expected <= to_date))))
     free_houses = list(map(lambda elem: elem[0], db.session.query(House.house_id, House.house_category_id)
                            .filter(~House.house_id.in_(occupied_house_ids)).all()))
-    house_and_category = db.session.query(House.house_id, House.house_category_id).filter(~House.house_id.in_(occupied_house_ids)).all()
+    house_and_category = db.session.query(House.house_id, House.house_category_id).filter(
+        ~House.house_id.in_(occupied_house_ids)).all()
 
     house_prices = dict()
     for house_id, house_category_id in house_and_category:
@@ -341,5 +347,3 @@ def cancel_order(order_id: int):
         return response
     else:
         return Response(status=404)
-
-

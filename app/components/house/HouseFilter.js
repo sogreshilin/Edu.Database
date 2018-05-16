@@ -8,6 +8,7 @@ import { SessionStorage, StorageKeys } from "../Storage";
 
 import styles from './house_filter.scss';
 import axios from "axios";
+import { routes } from '../../routes';
 
 const host = "http://localhost:5000";
 
@@ -140,7 +141,7 @@ export default class HouseFilter extends React.Component {
         return (
             this.state.redirectToOrderForm ? (
                 <Route>
-                    <Redirect push to="/orders/finish" />
+                    <Redirect push to={routes.ORDER_FINISH} />
                 </Route>
                 ) : (
             this.state.showLoadError ? (

@@ -1,0 +1,232 @@
+$mainGreen: #4CAF50;
+
+.landing-image-block {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height:100vh;
+  //display: table;
+
+  .landing-image-section, .landing-buttons-section {
+    width:100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .landing-image-section {
+    position: relative;
+    height:100vh;
+    min-height: 500px;
+    background: url('http://dosug-vko.kz/images/slider/baza-sinegorje/sl-1.jpg') no-repeat center center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+
+    .landing-text-container {
+      position: relative;
+      top: 25vh;
+      //min-height: 300px;
+      min-width: 300px;
+      max-width: 500px;
+
+      padding: 50px 30px;
+      background: #fff;
+
+      .landing-text {
+        margin-bottom: 50px;
+        font-size: 2em;
+        font-weight: lighter;
+        font-family: 'Roboto Slab', "Open Sans", Helvetica, sans-serif;
+        color: #333;
+      }
+
+    }
+
+  }
+
+  .landing-buttons-section {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .landing-buttons {
+      .action-button,  .details-button {
+        display: inline;
+        vertical-align: middle;
+        margin: 0;
+
+        a {
+          font-size: 1.3em;
+          padding: 15px;
+          text-decoration: none;
+        }
+      }
+
+      .action-button {
+        border: none;
+
+        a {
+          color:#fff;
+          background: $mainGreen;
+        }
+
+        a:hover {
+          background: #347736;
+        }
+
+      }
+
+
+      .details-button {
+        border: none;
+
+        a {
+          color:#999;
+        }
+
+        a:hover {
+          color: $mainGreen;
+        }
+      }
+
+
+    }
+
+  }
+
+}
+
+
+$gradientStart: #fdfbfb;
+$gradientEnd: #FFFCC7;
+//$gradientEnd: #ebedee;
+
+.accommodation-information-block {
+
+  margin: 0 auto;
+  padding: 30px 10px;
+  //background: #f5f8fa;
+
+  background: #fafafa;  /* fallback for old browsers */
+
+  .heading {
+    text-align: center;
+    padding: 20px 0;
+  }
+
+
+  .house-info-grid {
+    display: table;
+    width: 100%;
+    margin: 50px 0;
+
+    .house-info-item {
+      display: table-cell;
+      width: 33%;
+      border-right: 1px solid #afafaf;
+      text-align: center;
+      font-size: 1.4em;
+      color: #666;
+    }
+
+    .house-info-item:last-of-type {
+      border: none;
+    }
+  }
+
+  .extra-info {
+    color: #666;
+    font-size: 1.1em;
+
+    .all-services-wrapper {
+      margin-top: 30px;
+      width: 100%;
+      text-align: center;
+    }
+
+  }
+
+}
+
+
+.standard-link-button {
+  display: inline-block;
+  padding: 20px;
+  color: $mainGreen;
+  border: 1px solid $mainGreen;
+  text-decoration: none;
+  font-size: 1.3em;
+  background: transparent;
+
+  -webkit-transition: color 0.1s, background 0.1s;
+  -moz-transition: color 0.1s, background 0.1s;
+  -ms-transition: color 0.1s, background 0.1s;
+  -o-transition: color 0.1s, background 0.1s;
+  transition: color 0.1s, background 0.1s;
+}
+
+.standard-link-button:hover {
+  color: #fff;
+  background: $mainGreen;
+  text-decoration: none;
+
+  -webkit-transition: color 0.1s, background 0.1s;
+  -moz-transition: color 0.1s, background 0.1s;
+  -ms-transition: color 0.1s, background 0.1s;
+  -o-transition: color 0.1s, background 0.1s;
+  transition: color 0.1s, background 0.1s;
+}
+
+.book-offer-reminder-block {
+
+  width: 100%;
+  padding: 30px 10px;
+  text-align: center;
+
+  p {
+    color: #666;
+    font-size: 1.6em;
+    margin-bottom: 50px;
+  }
+
+}
+
+
+.subscription-offer-block {
+  width: 100%;
+  padding: 30px 10px;
+  //background: #031C11;
+  text-align: center;
+  
+  p {
+    color: #666;
+    font-size: 1.6em;
+  }
+  
+  input {
+    border: none;
+    border-bottom: 1px solid $mainGreen;
+    outline: none;
+    text-indent: 10px;
+    font-size: 1.7em;
+    color: #333;
+    margin-right: 40px;
+  }
+
+  input::placeholder {
+    color: #dfdfdf;
+  }
+
+}
+
+.image-gallery-block {
+  max-height: 100vh !important;
+  width: auto;
+
+  img {
+    max-height: 100vh !important;
+    //height: auto;
+  }
+}

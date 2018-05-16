@@ -6,22 +6,32 @@ import styles from './landing.scss';
 
 const landingText = "Отдых в живописном районе Восточного Казахстана";
 
+const smoothAnchorScroll = (elementId) => {
+    const anchor = document.getElementById(elementId);
+    const topPosition = anchor.getBoundingClientRect().top;
+    window.scrollTo({
+        top: topPosition,
+        behavior: "smooth"
+    })
+};
 
 const LandingImageBlock = ({ onDetailsClick }) => {
     return (
         <section className={'landing-image-block'}>
             <div className={'landing-image-section'}>
-                <div className={'landing-text-container'}>
-                    <p className={'landing-text'}>{ landingText }</p>
-                </div>
-            </div>
-            <div className={'landing-buttons-section'}>
-                <div className={'landing-buttons'}>
-                    <div className={'action-button'}>
-                        <Link to='/filter'>Забронировать</Link>
-                    </div>
-                    <div className={'details-button'}>
-                        <a onClick={onDetailsClick} href='#accommodation'>Подробности</a>
+                <div className={"container"}>
+                    <div className={'landing-text-container'}>
+                        <p className={'landing-text'}>{ landingText }</p>
+                        <div className={'landing-buttons-section'}>
+                            <div className={'landing-buttons'}>
+                                <div className={'action-button'}>
+                                    <Link to='/filter'>Забронировать</Link>
+                                </div>
+                                <div className={'details-button'}>
+                                    <a onClick={onDetailsClick}>Подробности</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,6 +64,9 @@ const AccommodationInformation = () => (
                 <hr/>
                 <p>Вместимость каждой квартиры - 5 человек</p>
                 <p>Все квартиры оснащены кухонным оборудованием и инвентарем, имеется санузел с душевой кабиной</p>
+                <div className={"all-services-wrapper"}>
+                    <Link className={'standard-link-button'} to='/services'>Все услуги</Link>
+                </div>
             </div>
         </div>
     </section>
@@ -63,9 +76,9 @@ const AccommodationInformation = () => (
 
 const BookOfferReminder = () => (
     <section className={'book-offer-reminder-block'}>
-        <p>Попробуйте нашу базу отдыха</p>
+        <p>Не отказывайте себе в приятном отдыхе</p>
         <div>
-            <Link className={'book-reminder-button'} to={'/filter'}>Забронировать дом</Link>
+            <Link className={'standard-link-button'} to={'/filter'}>Забронировать дом</Link>
         </div>
     </section>
 );
@@ -75,7 +88,7 @@ const SubscriptionOffer = () => (
         <p>Узнайте о новых предложениях первым</p>
         <div>
             <input placeholder={'Email'} />
-            <button>Подписаться</button>
+            <button className={"standard-link-button"}>Подписаться</button>
         </div>
     </section>
 );
@@ -114,10 +127,11 @@ export default class Landing extends Component {
     render () {
         return (
             <div className={'landing'}>
-                <LandingImageBlock onDetailsClick={() => {}} />
+                <LandingImageBlock onDetailsClick={() => {smoothAnchorScroll("accommodation")}} />
                 <AccommodationInformation />
                 <ImageGalleryBlock />
                 <BookOfferReminder />
+                <hr/>
                 <SubscriptionOffer />
             </div>
         );

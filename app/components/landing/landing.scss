@@ -4,7 +4,7 @@ $mainGreen: #4CAF50;
   margin: 0;
   padding: 0;
   width: 100vw;
-  height:90vh;
+  height:100vh;
   //display: table;
 
   .landing-image-section, .landing-buttons-section {
@@ -14,7 +14,8 @@ $mainGreen: #4CAF50;
   }
 
   .landing-image-section {
-    height:80vh;
+    position: relative;
+    height:100vh;
     min-height: 500px;
     background: url('http://dosug-vko.kz/images/slider/baza-sinegorje/sl-1.jpg') no-repeat center center;
     -webkit-background-size: cover;
@@ -23,14 +24,21 @@ $mainGreen: #4CAF50;
     background-size: cover;
 
     .landing-text-container {
-      //height: 100%;
+      position: relative;
+      top: 25vh;
+      //min-height: 300px;
+      min-width: 300px;
+      max-width: 500px;
+
+      padding: 50px 30px;
+      background: #fff;
 
       .landing-text {
-        padding: 20px;
-        font-size: 3em;
-        //line-height: 85vh;
-        color: white;
-        font-weight: bolder;
+        margin-bottom: 50px;
+        font-size: 2em;
+        font-weight: lighter;
+        font-family: 'Roboto Slab', "Open Sans", Helvetica, sans-serif;
+        color: #333;
       }
 
     }
@@ -38,7 +46,6 @@ $mainGreen: #4CAF50;
   }
 
   .landing-buttons-section {
-    //height: 14vh;
     min-height: 50px;
     display: flex;
     align-items: center;
@@ -48,14 +55,35 @@ $mainGreen: #4CAF50;
       .action-button,  .details-button {
         display: inline;
         vertical-align: middle;
-        width: 50%;
         margin: 0;
 
         a {
-          color: #999;
           font-size: 1.3em;
-          padding: 10px;
+          padding: 15px;
           text-decoration: none;
+        }
+      }
+
+      .action-button {
+        border: none;
+
+        a {
+          color:#fff;
+          background: $mainGreen;
+        }
+
+        a:hover {
+          background: #347736;
+        }
+
+      }
+
+
+      .details-button {
+        border: none;
+
+        a {
+          color:#999;
         }
 
         a:hover {
@@ -63,9 +91,6 @@ $mainGreen: #4CAF50;
         }
       }
 
-      .action-button {
-        border-right: 2px solid #E5BF42;
-      }
 
     }
 
@@ -114,10 +139,45 @@ $gradientEnd: #FFFCC7;
   .extra-info {
     color: #666;
     font-size: 1.1em;
+
+    .all-services-wrapper {
+      margin-top: 30px;
+      width: 100%;
+      text-align: center;
+    }
+
   }
 
 }
 
+
+.standard-link-button {
+  display: inline-block;
+  padding: 20px;
+  color: $mainGreen;
+  border: 1px solid $mainGreen;
+  text-decoration: none;
+  font-size: 1.3em;
+  background: transparent;
+
+  -webkit-transition: color 0.1s, background 0.1s;
+  -moz-transition: color 0.1s, background 0.1s;
+  -ms-transition: color 0.1s, background 0.1s;
+  -o-transition: color 0.1s, background 0.1s;
+  transition: color 0.1s, background 0.1s;
+}
+
+.standard-link-button:hover {
+  color: #fff;
+  background: $mainGreen;
+  text-decoration: none;
+
+  -webkit-transition: color 0.1s, background 0.1s;
+  -moz-transition: color 0.1s, background 0.1s;
+  -ms-transition: color 0.1s, background 0.1s;
+  -o-transition: color 0.1s, background 0.1s;
+  transition: color 0.1s, background 0.1s;
+}
 
 .book-offer-reminder-block {
 
@@ -129,32 +189,6 @@ $gradientEnd: #FFFCC7;
     color: #666;
     font-size: 1.6em;
     margin-bottom: 50px;
-  }
-
-  .book-reminder-button {
-    display: inline-block;
-    padding: 20px;
-    color: $mainGreen;
-    border: 1px solid $mainGreen;
-    text-decoration: none;
-    font-size: 1.3em;
-
-    -webkit-transition: color 0.1s, background 0.1s;
-    -moz-transition: color 0.1s, background 0.1s;
-    -ms-transition: color 0.1s, background 0.1s;
-    -o-transition: color 0.1s, background 0.1s;
-    transition: color 0.1s, background 0.1s;
-  }
-
-  .book-reminder-button:hover {
-    color: #fff;
-    background: $mainGreen;
-
-    -webkit-transition: color 0.1s, background 0.1s;
-    -moz-transition: color 0.1s, background 0.1s;
-    -ms-transition: color 0.1s, background 0.1s;
-    -o-transition: color 0.1s, background 0.1s;
-    transition: color 0.1s, background 0.1s;
   }
 
 }
@@ -175,36 +209,24 @@ $gradientEnd: #FFFCC7;
     border: none;
     border-bottom: 1px solid $mainGreen;
     outline: none;
-    text-indent: 10px;
+    text-indent: 40px;
     font-size: 1.7em;
     color: #333;
+    margin-right: 10px;
   }
 
   input::placeholder {
     color: #dfdfdf;
   }
 
-  button {
-    padding: 5px;
-    font-size: 1.3em;
-    background: #ffffff;
-    color: $mainGreen;
-    border: 1px solid $mainGreen;
-  }
-
-  button:hover {
-    color: #fff;
-    background: $mainGreen;
-  }
-
 }
 
 .image-gallery-block {
-  max-height: 900px !important;
+  max-height: 100vh !important;
   width: auto;
 
   img {
-    max-height: 800px;
-    height: auto;
+    max-height: 100vh !important;
+    //height: auto;
   }
 }

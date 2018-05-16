@@ -12,11 +12,7 @@ model = {
     Order: 'Order.csv',
     Service: 'Service.csv',
     OrderService: 'OrderService.csv',
-    Price: 'Price.csv',
-    HousePrice: 'HousePrice.csv',
-    SurchargePrice: 'SurchargePrice.csv',
     ServicePrice: 'ServicePrice.csv',
-    PenaltyPrice: 'PenaltyPrice.csv',
     Penalty: 'Penalty.csv',
     Payment: 'Payment.csv',
 }

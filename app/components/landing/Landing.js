@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from "react-router-dom";
+import { Link, withRouter } from "react-router-dom";
 import ImageGallery from 'react-image-gallery';
 
 import styles from './landing.scss';
@@ -9,11 +9,21 @@ import { routes } from '../../routes';
 
 const landingText = "Отдых в живописном районе Восточного Казахстана";
 
+
+const handleRoutingOnAnchorClick = (event, history, location) => {
+    event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    const attr = event.target.getAttribute("href");
+    const nextLocation = location.pathname + attr;
+    history.push(nextLocation);
+};
+
 const smoothAnchorScroll = (elementId) => {
     const anchor = document.getElementById(elementId);
     const topPosition = anchor.getBoundingClientRect().top;
+    const currentScroll = document.documentElement.scrollTop;
+    const targetScrollPosition = currentScroll + topPosition;
     window.scrollTo({
-        top: topPosition,
+        top: targetScrollPosition,
         behavior: "smooth"
     })
 };
@@ -31,7 +41,7 @@ const LandingImageBlock = ({ onDetailsClick }) => {
                                     <Link to={routes.BOOK_HOUSE}>Забронировать</Link>
                                 </div>
                                 <div className={'details-button'}>
-                                    <a onClick={onDetailsClick}>Подробности</a>
+                                    <a onClick={onDetailsClick} href={"#accommodation"}>Подробности</a>
                                 </div>
                             </div>
                         </div>
@@ -162,16 +172,17 @@ const ContactInformation = () => (
 );
 
 
-export default class Landing extends Component {
+class Landing extends Component {
 
     constructor(props) {
         super(props);
+        this.onDetailsClick = this.onDetailsClick.bind(this);
     }
 
     render () {
         return (
             <div className={'landing'}>
-                <LandingImageBlock onDetailsClick={() => {smoothAnchorScroll("accommodation")}} />
+                <LandingImageBlock onDetailsClick={(event) => this.onDetailsClick(event, "accommodation") } />
                 <AccommodationInformation />
                 <ImageGalleryBlock />
                 <BookOfferReminder />
@@ -180,4 +191,12 @@ export default class Landing extends Component {
             </div>
         );
     }
+
+    onDetailsClick(event, elementId) {
+        const { location, history } = this.props;
+        handleRoutingOnAnchorClick(event, history, location);
+        smoothAnchorScroll(elementId);
+    }
 }
+
+export default withRouter(Landing);

@@ -1,12 +1,10 @@
-from datetime import datetime
-from dateutil.tz import tzlocal
 from flask import Response, request
 
 from app import db
-from app.main.validators import validate_text_non_empty, validate_service_id, validate_house_category
-from app.models import Service, Extra, ServicePrice, Penalty, Excess, HouseRental, HouseCategory
-from app.service import bp
-from app.service.get import get_services, get_house_rental
+from app.main.validators import validate_text_non_empty, validate_service_id
+from app.models import Service, Extra, ServicePrice, Penalty, Excess, HouseRental
+from app.routes.service import bp
+from app.routes.service import get_services, get_house_rental
 
 
 def _add_service(content, _class):

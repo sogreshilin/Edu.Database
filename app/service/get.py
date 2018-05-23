@@ -1,8 +1,7 @@
 from flask import jsonify
 
-from app import db
-from app.models import Extra, Excess, Penalty, DateType, ClientCategory, HouseCategory, HouseRental
-from app.service import bp
+from app.models import Extra, Excess, Penalty, HouseRental
+from app.routes.service import bp
 
 
 def get_services(_service_subclass):

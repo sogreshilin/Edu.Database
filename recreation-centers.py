@@ -29,4 +29,4 @@ def make_shell_context():
 
 if __name__ == "__main__":
         # app.run(threaded=True, host='192.168.0.20',port=5000)
-        app.run(threaded=True)
+        app.run(threaded=True, debug=True)

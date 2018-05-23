@@ -53,7 +53,7 @@ def get_houses():
                 "name": house.name,
                 "description": house.description,
                 "category": house.house_category_id,
-                "image": house.image_url
+                "image_urls": house.image_url
             } for house in houses
         },
         "categories": {
@@ -316,11 +316,6 @@ def order_review(id: int):
         return jsonify(order_info.to_json())
     else:
         return Response(status=404)
-
-
-@bp.route('/api/house_categories')
-def get_house_categories():
-    return jsonify([category.to_json() for category in HouseCategory.query.all()])
 
 
 @bp.route('/api/orders/<int:order_id>/cancel', methods=['PATCH'])

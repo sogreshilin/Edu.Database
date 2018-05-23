@@ -8,6 +8,11 @@
 $footerHeight: 50px;
 $mainGreen: #4CAF50;
 
+
+.DayPicker-Day--isHoliday {
+  color: $mainGreen;
+}
+
 body {
   font-family: 'Open Sans', Arial, sans-serif;
 }

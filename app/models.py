@@ -84,13 +84,21 @@ class HouseCategory(db.Model):
     house_category_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
     description = db.Column(db.Text)
+    images = db.relationship('HouseCategoryImage', backref='house_category')
 
     def to_json(self):
         return {
             'id': self.house_category_id,
             'name': self.name,
             'description': self.description,
+            'images': [image.image_name for image in self.images]
         }
+
+
+class HouseCategoryImage(db.Model):
+    __tablename__ = 'house_category_image'
+    house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'), primary_key=True)
+    image_name = db.Column(db.String(128), primary_key=True)
 
 
 class House(db.Model):

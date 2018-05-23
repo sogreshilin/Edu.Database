@@ -4,6 +4,7 @@ export const routes = {
     BOOK_HOUSE: "/filter",
     ADD_HOUSE: "/edit/add_house",
     ADD_HOUSE_CATEGORY: "/edit/add_house_category",
+    EDIT: "/edit",
     EDIT_SERVICE: "/edit/service",
     EDIT_PRICE: "/edit/price",
     ADMIN_ORDERS: "/admin/orders",

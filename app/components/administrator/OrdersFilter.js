@@ -4,7 +4,6 @@ import {server} from "../../index";
 import {Redirect, Route} from "react-router-dom";
 import { Card } from '@blueprintjs/core';
 
-import styles from './order_filter.scss';
 import {SessionStorage} from "../Storage";
 import {OrderStatusText} from "../order/order";
 

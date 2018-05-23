@@ -139,7 +139,7 @@ export default class EditService extends React.Component {
 
     render() {
         return (
-            <div className="docs-dialog-example">
+            <div>
                 <Dialog
                     onClose={this.handleCancel}
                     isOpen={this.state.overlayIsOpen}

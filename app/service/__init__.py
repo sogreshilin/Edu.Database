@@ -2,4 +2,4 @@ from flask import Blueprint
 
 bp = Blueprint('service', __name__)
 
-from app.routes.service import post, get
+from app.service import post, get

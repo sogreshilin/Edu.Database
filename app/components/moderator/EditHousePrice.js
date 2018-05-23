@@ -3,7 +3,7 @@ import axios from "axios/index";
 import {server} from "../../index";
 import {ClientCategoryCodes, ClientCategoryText} from "../client/client";
 import {Tab, Tabs, NumericInput, Classes, Button, Intent, Spinner} from "@blueprintjs/core";
-import EditHouse from "../edit/EditHouse";
+import EditHouse from "./CategoriesAndHouses";
 
 const DateType = {
     1: 'Праздники',
@@ -44,7 +44,7 @@ const Panel = ({house_rental, house_categories, date_type, onPriceChanged}) => {
             </thead>
             <tbody>
             {
-                house_categories.map(house_category =>
+                Object.values(house_categories).map(house_category =>
                     <tr key={house_category.id}>
                         <td>{house_category.name}</td>
                         <td>
@@ -112,7 +112,7 @@ export default class EditHousePrice extends React.Component {
         super();
 
         this.state = {
-            house_categories: [],
+            house_categories: {},
             house_rental: [],
             changed_prices: {},
             uploading: false,

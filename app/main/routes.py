@@ -155,7 +155,9 @@ def add_payment():
         print('filtered:')
         total = 0
         payment = Payment(order_id=order.order_id, total=sum(map(
-            lambda order_service: order_service.amount * order_service.service.price, order_services)))
+            lambda order_service:
+                order_service.amount * order_service.service.price_at(order_service.order_date).value,
+                order_services)))
         db.session.add(payment)
         db.session.flush()
         for service in order_services:

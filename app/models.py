@@ -164,7 +164,6 @@ class Order(db.Model):
             'house': {
                 'id': self.house.house_id,
                 'name': self.house.name,
-                'description': self.house.description,
                 'category_id': self.house.house_category_id,
                 'category_name': self.house.house_category.name
             },
@@ -179,7 +178,7 @@ class Order(db.Model):
                 'id': order_service.order_service_id,
                 'name': order_service.service.name,
                 'date': order_service.order_date.isoformat(),
-                'price': order_service.service.actual_price(),
+                'price': order_service.service.actual_price().value,
                 'amount': order_service.amount,
 
                 'is_paid': order_service.is_payed,

@@ -45,6 +45,9 @@ def create_app(config_class=Config):
     from app.service import bp as service_bp
     app.register_blueprint(service_bp)
 
+    from app.house import bp as house_bp
+    app.register_blueprint(house_bp)
+
     return app
 
 

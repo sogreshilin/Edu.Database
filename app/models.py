@@ -105,10 +105,11 @@ class House(db.Model):
     __tablename__ = 'house'
     house_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True, nullable=False)
-    description = db.Column(db.Text)
     house_category_id = db.Column(db.Integer, db.ForeignKey('house_category.house_category_id'))
-    image_url = db.Column(db.Text)
     house_category = db.relationship('HouseCategory', backref='houses')
+
+    def __repr__(self):
+        return str(self.house_id) + str(self.name) + str(self.house_category_id) + str(self.house_category)
 
 
 # class HousePrice(db.Model):
@@ -254,7 +255,7 @@ class DateType(enum.Enum):
 
     @staticmethod
     def get_date_type(date):
-        if date in Holiday.query.all():
+        if date.date() in map(lambda holiday: holiday.date.date(), Holiday.query.all()):
             return DateType.HOLIDAY
         elif DateType.is_weekend(date):
             return DateType.WEEKEND

@@ -9,3 +9,5 @@ def get_house_categories():
     house_categories = {category.house_category_id: category.to_json() for category in HouseCategory.query.all()}
     return jsonify(house_categories)
 
+
+

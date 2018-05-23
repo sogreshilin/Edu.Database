@@ -44,43 +44,19 @@ def get_holidays():
 def add_holiday():
     date = request.json['date']
     date = dateutil.parser.parse(date).astimezone(tzlocal()).replace(hour=0, minute=0, second=0, microsecond=0)
-    db.session.add(Holiday(date=date))
+    holiday = Holiday(date=date)
+    db.session.merge(holiday)
     db.session.commit()
     return get_holidays()
 
 
-@bp.route('/api/edit/house', methods=['POST'])
-def edit_house():
-    # todo: add images handling
-    content = request.form
-    try:
-        name = validate_text_non_empty(content['name'])
-        house = validate_house_id(content['house_id'])
-        description = content.get('description', '')
-    except (ValueError, KeyError) as error:
-        return Response(str(error), status=400)
-
-    house.name = name
-    house.description = description
+@bp.route('/api/remove/holiday', methods=['POST'])
+def remove_holiday():
+    date = request.json['date']
+    date = dateutil.parser.parse(date).astimezone(tzlocal()).replace(hour=0, minute=0, second=0, microsecond=0)
+    holiday = Holiday.query.filter(Holiday.date == date).first()
+    db.session.delete(holiday)
     db.session.commit()
-    return get_houses()
+    return get_holidays()
 
 
-@bp.route('/api/add/house', methods=['POST'])
-def add_house():
-    # todo: add images handling
-    name = request.form.get('name', None)
-    description = request.form.get('description', '')
-
-    if name is None:
-        return Response('House name cannot be empty', status=400)
-    try:
-        category = validate_house_category_id(request.form['category_id'])
-    except ValueError as error:
-        return Response(str(error), status=400)
-
-    house = House(name=name, description=description, house_category=category)
-    db.session.add(house)
-    db.session.commit()
-
-    return get_houses()

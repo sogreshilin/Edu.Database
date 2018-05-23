@@ -6,7 +6,6 @@ import styles from './main.scss';
 
 import OrderFinalization from './components/order/OrderFinalization';
 import HouseFilter from "./components/house/HouseFilter";
-import EditHouse from "./components/moderator/CategoriesAndHouses";
 import EditHouseCategory from "./components/edit/EditHouseCategory";
 import PriceGenerator from "./components/edit/EditHouseRentalPrices";
 import OrdersFilter from "./components/administrator/OrdersFilter";
@@ -41,7 +40,6 @@ const WrappedComponents = () => (
             <Route exact path={routes.ORDER_FINISH} component={OrderFinalization} />
             <Route path={routes.ORDER} component={OrderReview} />
             <Route exact path={routes.BOOK_HOUSE} component={HouseFilter} />
-            <Route exact path={routes.ADD_HOUSE} component={EditHouse} />
             <Route exact path={routes.ADD_HOUSE_CATEGORY} component={EditHouseCategory} />
             <Route exact path={routes.EDIT_SERVICE} component={EditService} />
             <Route exact path={routes.EDIT} component={ModeratorMainPage} />

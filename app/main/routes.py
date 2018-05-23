@@ -6,7 +6,7 @@ from sqlalchemy.orm import load_only
 
 from app import db
 from app.main import bp
-from flask import render_template, jsonify, request, Response
+from flask import render_template, jsonify, request, Response, send_file
 from flask_babel import _
 from flask_login import login_required, current_user
 
@@ -14,6 +14,7 @@ from app.main.validators import *
 from app.models import House, Order, HouseCategory, Client, ClientCategory, OrderStatus, Service, \
     OrderService, Payment, ServicePrice, HouseRental, Holiday, DateType
 from app.main.email import send_book_confirmation_email
+from config import IMAGE_DIR
 
 
 @bp.context_processor
@@ -22,11 +23,12 @@ def inject_now():
 
 
 def date_range(start_date, end_date):
-    for n in range(int((end_date - start_date).days) + 1):
+    for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
 
 def get_house_total_cost(house_category_id, client_category, from_date, to_date):
+    print(from_date, to_date)
     return sum([HouseRental.query
                .filter(and_(HouseRental.client_category == client_category,
                        HouseRental.house_category_id == house_category_id,
@@ -51,9 +53,7 @@ def get_houses():
             house.house_id: {
                 "id": house.house_id,
                 "name": house.name,
-                "description": house.description,
                 "category": house.house_category_id,
-                "image_urls": house.image_url
             } for house in houses
         },
         "categories": {
@@ -95,6 +95,7 @@ def get_free_houses():
                                 .parse(content['to_date'])
                                 .astimezone(tzlocal())
                                 .replace(hour=0, minute=0, second=0, microsecond=0))
+        print('api/free_houses', from_date, to_date)
         validate_date_earlier(from_date, to_date)
     except ValueError as error:
         return Response(str(error), status=400)
@@ -342,3 +343,11 @@ def cancel_order(order_id: int):
         return response
     else:
         return Response(status=404)
+
+
+@bp.route('/resources/image/<filename>')
+def get_image(filename):
+    print("get", filename)
+    extension = filename.split('.')[-1]
+    return send_file("../resources/image/" + filename, mimetype=('image/' + extension))
+

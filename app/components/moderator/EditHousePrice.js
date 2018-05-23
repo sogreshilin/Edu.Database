@@ -3,7 +3,6 @@ import axios from "axios/index";
 import {server} from "../../index";
 import {ClientCategoryCodes, ClientCategoryText} from "../client/client";
 import {Tab, Tabs, NumericInput, Classes, Button, Intent, Spinner} from "@blueprintjs/core";
-import EditHouse from "./CategoriesAndHouses";
 
 const DateType = {
     1: 'Праздники',

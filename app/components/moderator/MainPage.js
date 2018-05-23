@@ -3,7 +3,6 @@ import {server} from "../../index";
 import React from "react";
 import EditHousePrice from "./EditHousePrice";
 import {Tab, Tabs} from "@blueprintjs/core";
-import EditHouse from "./CategoriesAndHouses";
 import EditService from "./EditService";
 import EditCategory from "./EditCategory";
 import EditHolidays from "./EditHolidays";
